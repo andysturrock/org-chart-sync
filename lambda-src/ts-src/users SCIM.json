@@ -1,0 +1,536 @@
+{
+  "totalResults": 487,
+  "itemsPerPage": 10,
+  "startIndex": 1,
+  "schemas": [
+      "urn:scim:schemas:core:1.0"
+  ],
+  "Resources": [
+      {
+          "schemas": [
+              "urn:scim:schemas:core:1.0"
+          ],
+          "id": "UCPF3UVMW",
+          "externalId": "",
+          "meta": {
+              "created": "2023-02-10T01:07:06-08:00",
+              "location": "https://api.slack.com/scim/v1/Users/UCPF3UVMW"
+          },
+          "userName": "hollie.brown",
+          "nickName": "hollie.brown",
+          "name": {
+              "givenName": "Hollie",
+              "familyName": "Brown"
+          },
+          "displayName": "Hollie",
+          "profileUrl": "https://atombank.enterprise.slack.com/team/hollie.brown",
+          "title": "",
+          "timezone": "Europe/London",
+          "active": false,
+          "emails": [
+              {
+                  "value": "hollie.brown@atombank.co.uk",
+                  "primary": true
+              }
+          ],
+          "photos": [
+              {
+                  "value": "https://secure.gravatar.com/avatar/2ad92c1c77f97bb83903c1de904da7c7.jpg?s=192&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0024-192.png",
+                  "type": "photo"
+              }
+          ],
+          "groups": []
+      },
+      {
+          "schemas": [
+              "urn:scim:schemas:core:1.0"
+          ],
+          "id": "UCPKURCL9",
+          "externalId": "",
+          "meta": {
+              "created": "2023-02-10T01:07:11-08:00",
+              "location": "https://api.slack.com/scim/v1/Users/UCPKURCL9"
+          },
+          "userName": "googledrive",
+          "nickName": "googledrive",
+          "name": {
+              "givenName": "Google",
+              "familyName": "Drive"
+          },
+          "displayName": "Google Drive",
+          "profileUrl": "https://atombank.enterprise.slack.com/team/googledrive",
+          "title": "",
+          "timezone": "America/Los_Angeles",
+          "active": true,
+          "emails": [
+              {
+                  "value": "botuser-T04KL4D7HBP-A6NL8MJ6Q@slack-bots.com",
+                  "primary": true
+              }
+          ],
+          "photos": [
+              {
+                  "value": "https://avatars.slack-edge.com/2023-09-27/5953912494965_141e468680ca407bb3eb_192.png",
+                  "type": "photo"
+              }
+          ],
+          "groups": []
+      },
+      {
+          "schemas": [
+              "urn:scim:schemas:core:1.0"
+          ],
+          "id": "UCQ043PQU",
+          "externalId": "",
+          "meta": {
+              "created": "2023-02-10T01:07:13-08:00",
+              "location": "https://api.slack.com/scim/v1/Users/UCQ043PQU"
+          },
+          "userName": "neil.costello",
+          "nickName": "neil.costello",
+          "name": {
+              "givenName": "Neil",
+              "familyName": "Costello"
+          },
+          "displayName": "Neil",
+          "profileUrl": "https://atombank.enterprise.slack.com/team/neil.costello",
+          "title": "",
+          "timezone": "Europe/London",
+          "active": false,
+          "emails": [
+              {
+                  "value": "neil.costello@atombank.co.uk",
+                  "primary": true
+              }
+          ],
+          "photos": [
+              {
+                  "value": "https://secure.gravatar.com/avatar/1139af89ee56b494cd186da98568925c.jpg?s=192&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0024-192.png",
+                  "type": "photo"
+              }
+          ],
+          "groups": []
+      },
+      {
+          "schemas": [
+              "urn:scim:schemas:core:1.0"
+          ],
+          "id": "UCQ1XUC3W",
+          "externalId": "",
+          "meta": {
+              "created": "2023-02-10T01:07:14-08:00",
+              "location": "https://api.slack.com/scim/v1/Users/UCQ1XUC3W"
+          },
+          "userName": "bradley.smith",
+          "nickName": "bradley.smith",
+          "name": {
+              "givenName": "Bradley",
+              "familyName": "Smith"
+          },
+          "displayName": "Brad Smith",
+          "profileUrl": "https://atombank.enterprise.slack.com/team/bradley.smith",
+          "title": "",
+          "timezone": "Europe/London",
+          "active": false,
+          "emails": [
+              {
+                  "value": "bradley.smith@atombank.co.uk",
+                  "primary": true
+              }
+          ],
+          "photos": [
+              {
+                  "value": "https://avatars.slack-edge.com/2018-09-12/435416961158_8a64a349f3f93c0a8d35_192.jpg",
+                  "type": "photo"
+              }
+          ],
+          "groups": []
+      },
+      {
+          "schemas": [
+              "urn:scim:schemas:core:1.0",
+              "urn:scim:schemas:extension:enterprise:1.0"
+          ],
+          "id": "UCQ2N4RBN",
+          "externalId": "",
+          "meta": {
+              "created": "2023-02-10T01:07:15-08:00",
+              "location": "https://api.slack.com/scim/v1/Users/UCQ2N4RBN"
+          },
+          "userName": "liam.dexter",
+          "nickName": "liam.dexter",
+          "name": {
+              "givenName": "Liam",
+              "familyName": "Dexter",
+              "honorificPrefix": null
+          },
+          "displayName": "Liam",
+          "profileUrl": "https://atombank.enterprise.slack.com/team/liam.dexter",
+          "title": "Lead UX",
+          "timezone": "Europe/London",
+          "active": true,
+          "emails": [
+              {
+                  "value": "liam.dexter@atombank.co.uk",
+                  "primary": true
+              },
+              {
+                  "value": "",
+                  "primary": false
+              }
+          ],
+          "photos": [
+              {
+                  "value": "https://avatars.slack-edge.com/2023-02-01/4719014495527_21ad504533b265dcc1ca_192.jpg",
+                  "type": "photo"
+              }
+          ],
+          "addresses": [
+              {
+                  "streetAddress": null,
+                  "locality": null,
+                  "region": null,
+                  "postalCode": null,
+                  "country": null
+              }
+          ],
+          "phoneNumbers": [
+              {
+                  "value": null,
+                  "type": "mobile"
+              },
+              {
+                  "value": null,
+                  "primary": true
+              }
+          ],
+          "userType": null,
+          "roles": [
+              {
+                  "value": null,
+                  "primary": true
+              }
+          ],
+          "preferredLanguage": null,
+          "locale": null,
+          "urn:scim:schemas:extension:enterprise:1.0": {
+              "employeeNumber": null,
+              "costCenter": null,
+              "organization": null,
+              "division": null,
+              "department": null,
+              "manager": {
+                  "managerId": null
+              }
+          },
+          "groups": []
+      },
+      {
+          "schemas": [
+              "urn:scim:schemas:core:1.0",
+              "urn:scim:schemas:extension:enterprise:1.0"
+          ],
+          "id": "UCQ3U9WFM",
+          "externalId": "",
+          "meta": {
+              "created": "2023-02-10T01:07:16-08:00",
+              "location": "https://api.slack.com/scim/v1/Users/UCQ3U9WFM"
+          },
+          "userName": "leigh.peacock-go-7327",
+          "nickName": "leigh.peacock-go-7327",
+          "name": {
+              "givenName": "Leigh",
+              "familyName": "Peacock-Goodwin",
+              "honorificPrefix": null
+          },
+          "displayName": "LPG",
+          "profileUrl": "https://atombank.enterprise.slack.com/team/leigh.peacock-go-7327",
+          "title": "Head of Marketing & PR",
+          "timezone": "Europe/London",
+          "active": false,
+          "emails": [
+              {
+                  "value": "leigh.peacock-goodwin@atombank.co.uk",
+                  "primary": true
+              },
+              {
+                  "value": "",
+                  "primary": false
+              }
+          ],
+          "photos": [
+              {
+                  "value": "https://avatars.slack-edge.com/2020-08-06/1291745681476_8b1850ae18013cc08855_192.jpg",
+                  "type": "photo"
+              }
+          ],
+          "addresses": [
+              {
+                  "streetAddress": null,
+                  "locality": null,
+                  "region": null,
+                  "postalCode": null,
+                  "country": null
+              }
+          ],
+          "phoneNumbers": [
+              {
+                  "value": null,
+                  "type": "mobile"
+              },
+              {
+                  "value": null,
+                  "primary": true
+              }
+          ],
+          "userType": null,
+          "roles": [
+              {
+                  "value": null,
+                  "primary": true
+              }
+          ],
+          "preferredLanguage": null,
+          "locale": null,
+          "urn:scim:schemas:extension:enterprise:1.0": {
+              "employeeNumber": null,
+              "costCenter": null,
+              "organization": null,
+              "division": null,
+              "department": null,
+              "manager": {
+                  "managerId": null
+              }
+          },
+          "groups": []
+      },
+      {
+          "schemas": [
+              "urn:scim:schemas:core:1.0"
+          ],
+          "id": "UCQS1BWUU",
+          "externalId": "",
+          "meta": {
+              "created": "2023-02-10T01:07:17-08:00",
+              "location": "https://api.slack.com/scim/v1/Users/UCQS1BWUU"
+          },
+          "userName": "teamline",
+          "nickName": "teamline",
+          "name": {
+              "givenName": "",
+              "familyName": ""
+          },
+          "displayName": "",
+          "profileUrl": "https://atombank.enterprise.slack.com/team/teamline",
+          "title": "",
+          "timezone": "America/Los_Angeles",
+          "active": false,
+          "emails": [
+              {
+                  "value": "botuser-T04KL4D7HBP-A0S35UGTC@slack-bots.com",
+                  "primary": true
+              }
+          ],
+          "photos": [
+              {
+                  "value": "https://avatars.slack-edge.com/2018-09-11/432513684385_8a251ab6b76ac48406ec_192.png",
+                  "type": "photo"
+              }
+          ],
+          "groups": []
+      },
+      {
+          "schemas": [
+              "urn:scim:schemas:core:1.0",
+              "urn:scim:schemas:extension:enterprise:1.0"
+          ],
+          "id": "UCR7RGGET",
+          "externalId": "",
+          "meta": {
+              "created": "2023-02-10T01:07:18-08:00",
+              "location": "https://api.slack.com/scim/v1/Users/UCR7RGGET"
+          },
+          "userName": "george.north",
+          "nickName": "george.north",
+          "name": {
+              "givenName": "George",
+              "familyName": "North",
+              "honorificPrefix": null
+          },
+          "displayName": "Georgio",
+          "profileUrl": "https://atombank.enterprise.slack.com/team/george.north",
+          "title": "Multimedia Designer",
+          "timezone": "Europe/London",
+          "active": false,
+          "emails": [
+              {
+                  "value": "george.north@atombank.co.uk",
+                  "primary": true
+              },
+              {
+                  "value": "",
+                  "primary": false
+              }
+          ],
+          "photos": [
+              {
+                  "value": "https://avatars.slack-edge.com/2019-09-18/766357541318_250c45b5e3b6214cd217_192.jpg",
+                  "type": "photo"
+              }
+          ],
+          "addresses": [
+              {
+                  "streetAddress": null,
+                  "locality": null,
+                  "region": null,
+                  "postalCode": null,
+                  "country": null
+              }
+          ],
+          "phoneNumbers": [
+              {
+                  "value": null,
+                  "type": "mobile"
+              },
+              {
+                  "value": null,
+                  "primary": true
+              }
+          ],
+          "userType": null,
+          "roles": [
+              {
+                  "value": null,
+                  "primary": true
+              }
+          ],
+          "preferredLanguage": null,
+          "locale": null,
+          "urn:scim:schemas:extension:enterprise:1.0": {
+              "employeeNumber": null,
+              "costCenter": null,
+              "organization": null,
+              "division": null,
+              "department": null,
+              "manager": {
+                  "managerId": null
+              }
+          },
+          "groups": []
+      },
+      {
+          "schemas": [
+              "urn:scim:schemas:core:1.0"
+          ],
+          "id": "UCRGSTQDU",
+          "externalId": "",
+          "meta": {
+              "created": "2023-02-10T01:07:19-08:00",
+              "location": "https://api.slack.com/scim/v1/Users/UCRGSTQDU"
+          },
+          "userName": "kathryn.beeson",
+          "nickName": "kathryn.beeson",
+          "name": {
+              "givenName": "",
+              "familyName": ""
+          },
+          "displayName": "Kat",
+          "profileUrl": "https://atombank.enterprise.slack.com/team/kathryn.beeson",
+          "title": "",
+          "timezone": "Europe/London",
+          "active": false,
+          "emails": [
+              {
+                  "value": "kathryn.beeson@atombank.co.uk",
+                  "primary": true
+              }
+          ],
+          "photos": [
+              {
+                  "value": "https://secure.gravatar.com/avatar/42c114cc8d0e531fff4be3bc030a6541.jpg?s=192&d=https%3A%2F%2Fa.slack-edge.com%2Fdf10d%2Fimg%2Favatars%2Fava_0008-192.png",
+                  "type": "photo"
+              }
+          ],
+          "groups": []
+      },
+      {
+          "schemas": [
+              "urn:scim:schemas:core:1.0",
+              "urn:scim:schemas:extension:enterprise:1.0"
+          ],
+          "id": "UCRH4QEMC",
+          "externalId": "",
+          "meta": {
+              "created": "2023-02-10T01:07:20-08:00",
+              "location": "https://api.slack.com/scim/v1/Users/UCRH4QEMC"
+          },
+          "userName": "nina.athey",
+          "nickName": "nina.athey",
+          "name": {
+              "givenName": "Nina",
+              "familyName": "Athey",
+              "honorificPrefix": null
+          },
+          "displayName": "Nina",
+          "profileUrl": "https://atombank.enterprise.slack.com/team/nina.athey",
+          "title": "Marketing Manager",
+          "timezone": "Europe/London",
+          "active": true,
+          "emails": [
+              {
+                  "value": "nina.athey@atombank.co.uk",
+                  "primary": true
+              },
+              {
+                  "value": "",
+                  "primary": false
+              }
+          ],
+          "photos": [
+              {
+                  "value": "https://avatars.slack-edge.com/2023-12-12/6331126993235_34534ea7ab095e4fcff7_192.jpg",
+                  "type": "photo"
+              }
+          ],
+          "addresses": [
+              {
+                  "streetAddress": null,
+                  "locality": null,
+                  "region": null,
+                  "postalCode": null,
+                  "country": null
+              }
+          ],
+          "phoneNumbers": [
+              {
+                  "value": null,
+                  "type": "mobile"
+              },
+              {
+                  "value": null,
+                  "primary": true
+              }
+          ],
+          "userType": null,
+          "roles": [
+              {
+                  "value": null,
+                  "primary": true
+              }
+          ],
+          "preferredLanguage": null,
+          "locale": null,
+          "urn:scim:schemas:extension:enterprise:1.0": {
+              "employeeNumber": null,
+              "costCenter": null,
+              "organization": null,
+              "division": null,
+              "department": null,
+              "manager": {
+                  "managerId": null
+              }
+          },
+          "groups": []
+      }
+  ]
+}
