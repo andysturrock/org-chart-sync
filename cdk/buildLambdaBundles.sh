@@ -7,7 +7,8 @@ rm -rf ../lambda-src/dist
 
 lambdas="handleGetSlackAtlasHierarchy \
  handleGetSlackAtlasHierarchyAuthorizer \
- handleSlackAuthRedirect"
+ handleSlackAuthRedirect \
+ rotateSlackRefreshToken"
 
 for lambda in ${lambdas}
 do

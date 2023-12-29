@@ -1,6 +1,7 @@
 import 'source-map-support/register';
 import * as util from 'util';
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
+import {getUsers} from './slackAPI';
 
 /**
  * Handle the request for Slack Atlas hierarchy
@@ -10,14 +11,11 @@ import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 export async function handleGetSlackAtlasHierarchy(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
     console.log(`event: ${util.inspect(event, true, 99)}`);
-
-    const text = "Hello world";
-
-    // const url = "https://api.slack.com/scim/v1/Users";
-
+    
+    const users = await getUsers();
     const result: APIGatewayProxyResult = {
       body: JSON.stringify({
-        message: text,
+        message: users,
       }),
       statusCode: 200
     };

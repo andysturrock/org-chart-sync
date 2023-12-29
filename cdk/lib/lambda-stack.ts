@@ -7,6 +7,8 @@ import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import {LambdaStackProps} from './common';
+import {Rule, Schedule} from 'aws-cdk-lib/aws-events';
+import {LambdaFunction} from 'aws-cdk-lib/aws-events-targets';
 
 export class LambdaStack extends Stack {
   constructor(scope: Construct, id: string, props: LambdaStackProps) {
@@ -27,6 +29,24 @@ export class LambdaStack extends Stack {
       timeout: Duration.seconds(30),
     };
 
+    // The lambda for rotating the Slack refresh token.
+    const rotateSlackRefreshTokenLambda = new lambda.Function(this, "rotateSlackRefreshTokenLambda", {
+      handler: "rotateSlackRefreshToken.rotateSlackRefreshToken",
+      functionName: 'OrgChartSync-rotateSlackRefreshToken',
+      code: lambda.Code.fromAsset("../lambda-src/dist/rotateSlackRefreshToken"),
+      ...allLambdaProps
+    });
+    // Allow read/write access to the secret it needs
+    props.orgChartSyncSecret.grantRead(rotateSlackRefreshTokenLambda);
+    props.orgChartSyncSecret.grantWrite(rotateSlackRefreshTokenLambda);
+    // Schedule it to run every 2 hours.
+    // The tokens last 12 hours but more secure to rotate more often.
+    new Rule(this, 'Rule', {
+      description: "Schedule the OrgChartSync-rotateSlackRefreshToken lambda every 2 hours",
+      schedule: Schedule.rate(Duration.hours(2)),
+      targets: [new LambdaFunction(rotateSlackRefreshTokenLambda)],
+    });
+
     // The lambda for handling the callback for the Slack install
     const handleSlackAuthRedirectLambda = new lambda.Function(this, "handleSlackAuthRedirectLambda", {
       handler: "handleSlackAuthRedirect.handleSlackAuthRedirect",
@@ -34,6 +54,9 @@ export class LambdaStack extends Stack {
       code: lambda.Code.fromAsset("../lambda-src/dist/handleSlackAuthRedirect"),
       ...allLambdaProps
     });
+    // Allow read/write access to the secret it needs
+    props.orgChartSyncSecret.grantRead(handleSlackAuthRedirectLambda);
+    props.orgChartSyncSecret.grantWrite(handleSlackAuthRedirectLambda);
 
     // The lambda for getting the Slack org hierarchy
     const handleGetSlackAtlasHierarchyLambda = new lambda.Function(this, "handleGetSlackAtlasHierarchyLambda", {
@@ -42,6 +65,9 @@ export class LambdaStack extends Stack {
       code: lambda.Code.fromAsset("../lambda-src/dist/handleGetSlackAtlasHierarchy"),
       ...allLambdaProps
     });
+    // Allow read/write access to the secret it needs
+    props.orgChartSyncSecret.grantRead(handleGetSlackAtlasHierarchyLambda);
+    props.orgChartSyncSecret.grantWrite(handleGetSlackAtlasHierarchyLambda);
 
     // The lambda which acts as an authorizer for handleGetSlackAtlasHierarchyLambda
     const handleGetSlackAtlasHierarchyAuthorizerLambda = new lambda.Function(this, "handleGetSlackAtlasHierarchyAuthorizerLambda", {

@@ -1,8 +1,9 @@
 import 'source-map-support/register';
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import axios, {AxiosRequestConfig} from "axios";
-import {getSecretValue} from "./awsAPI";
+import {getSecretValue, putSecretValue} from "./awsAPI";
 import querystring from 'querystring';
+import util from 'util';
 
 export async function handleSlackAuthRedirect(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
@@ -35,10 +36,15 @@ export async function handleSlackAuthRedirect(event: APIGatewayProxyEvent): Prom
     type SlackResponse = {
       ok: boolean,
       app_id: string,
-      authed_user: { id: string },
+      authed_user: {
+        id: string,
+        access_token: string,
+        refresh_token: string
+      },
       scope: string,
       token_type: string,
       access_token: string,
+      refresh_token: string,
       bot_user_id: string,
       team?: { id: string, name: string },
       enterprise?: { id: string, name: string },
@@ -46,10 +52,14 @@ export async function handleSlackAuthRedirect(event: APIGatewayProxyEvent): Prom
       error?: string
     };
     const {data} = await axios.post<SlackResponse>(url, form, config);
-
+    console.log(`data: ${util.inspect(data, true, 99)}`);
+    
     if(!data.ok) {
       throw new Error(`Failed to exchange token: ${data.error}`);
     }
+
+    // Store the user refresh token in the Secret Manager
+    await putSecretValue("OrgChartSync", "slackRefreshToken", data.authed_user.refresh_token);
 
     let successText = `Successfully installed OrgChartSync in workspace`;
     if(data.team?.name) {
