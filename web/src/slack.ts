@@ -1,13 +1,14 @@
 import inspect from 'browser-util-inspect';
-import {graphConfig, slackConfig} from "./authConfig";
+import {slackConfig} from "./authConfig";
 import axios, {AxiosHeaders, AxiosRequestConfig} from "axios";
 
-export type SlackAtlasData = {
-  id: string;
-  userName: string;
-  title: string;
-  email: string;
-  managerId: string;
+export type SlackAtlasUser = {
+  id: string,
+  userName: string,
+  email: string,
+  title: string,
+  managerId: string | undefined,
+  active: boolean
 };
 
 export async function getSlackHierarchy(accessToken: string) {
@@ -15,17 +16,10 @@ export async function getSlackHierarchy(accessToken: string) {
     'Authorization': `Bearer ${accessToken}`
   });
 
-  const slackAtlasData: SlackAtlasData[] = [];
-  slackAtlasData.push({
-    id: 'andyID',
-    userName: 'andy.sturrock',
-    title: '',
-    email: '',
-    managerId: ''
-  });
-
-  const config: AxiosRequestConfig<SlackAtlasData[]> = {};
+  const config: AxiosRequestConfig<SlackAtlasUser[]> = {};
   config.headers = headers;
-  const response = await axios.get<SlackAtlasData[]>(slackConfig.slackAtlasEndpoint, config);
+  const response = await axios.get<SlackAtlasUser[]>(slackConfig.slackAtlasEndpoint, config);
+
+  console.log(`response.data: ${inspect(response.data, false, 99)}`);
   return response.data;
 }

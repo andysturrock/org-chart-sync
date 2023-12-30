@@ -11,7 +11,7 @@ import './App.css';
 
 import Button from 'react-bootstrap/Button';
 import {SilentRequest} from '@azure/msal-browser';
-import {SlackAtlasData, getSlackHierarchy} from './slack';
+import {SlackAtlasUser, getSlackHierarchy} from './slack';
 
 /**
 * Renders information about the signed-in user or a button to retrieve data about the user
@@ -86,7 +86,7 @@ function AADHierarchyContent() {
 
 function SlackHierarchyContent() {
   const {instance, accounts} = useMsal();
-  const [,setManagerData] = useState<SlackAtlasData[]>();
+  const [slackAtlasUsers, setSlackAtlasUsers] = useState<SlackAtlasUser[]>();
 
   const silentRequest: SilentRequest = {
     scopes: slackHierarchyAPIScopes.scopes,
@@ -98,18 +98,24 @@ function SlackHierarchyContent() {
     const authenticationResult = await instance.acquireTokenSilent(silentRequest);
     // console.log(`authenticationResult for slackHierarchyData: ${inspect(authenticationResult, true, 99)}`);
     console.log(`authenticationResult.accessToken for slackHierarchyData: ${inspect(authenticationResult.accessToken, true, 99)}`);
-    const managerData = await getSlackHierarchy(authenticationResult.accessToken);
-    setManagerData(managerData);
+    const slackAtlasUsers = await getSlackHierarchy(authenticationResult.accessToken);
+    setSlackAtlasUsers(slackAtlasUsers);
   }
-  const temp = async () => {
-    await slackHierarchyData();
-  };
-  void temp().then();
   return (
     <>
-      <label>
-      TODO Slack Org Data coming here.
-      </label>
+      {slackAtlasUsers ? (
+        <label>
+          TODO Slack Org Data coming here.
+        </label>
+      )
+        :
+        (
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          <Button variant="secondary" onClick={slackHierarchyData}>
+          Get Slack Hierarchy Information
+          </Button>
+        )
+      }
     </>
   );
 }

@@ -2,6 +2,7 @@ import 'source-map-support/register';
 import * as util from 'util';
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {getUsers} from './slackAPI';
+import {getSecretValue} from './awsAPI';
 
 /**
  * Handle the request for Slack Atlas hierarchy
@@ -11,12 +12,16 @@ import {getUsers} from './slackAPI';
 export async function handleGetSlackAtlasHierarchy(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
     console.log(`event: ${util.inspect(event, true, 99)}`);
+
+    const accessControlAllowOrigin = await getSecretValue('OrgChartSync', 'Access-Control-Allow-Origin');
     
     const users = await getUsers();
     const result: APIGatewayProxyResult = {
-      body: JSON.stringify({
-        message: users,
-      }),
+      headers: {
+        "Access-Control-Allow-Origin" : accessControlAllowOrigin,
+        "Access-Control-Allow-Credentials" : true
+      },
+      body: JSON.stringify(users),
       statusCode: 200
     };
 
@@ -32,6 +37,10 @@ export async function handleGetSlackAtlasHierarchy(event: APIGatewayProxyEvent):
     };
 
     const result: APIGatewayProxyResult = {
+      headers: {
+        "Access-Control-Allow-Origin" : "*",  // OK to allow any origin to get the error message
+        "Access-Control-Allow-Credentials" : true
+      },
       body: JSON.stringify(json),
       statusCode: 200
     };

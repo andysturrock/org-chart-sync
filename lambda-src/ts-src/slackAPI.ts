@@ -1,7 +1,7 @@
 import {getSecretValue, putSecretValue} from "./awsAPI";
 import axios, {AxiosRequestConfig} from "axios";
 import querystring from 'querystring';
-import {User} from "./slackTypes";
+import {SlackAtlasUser} from "./slackTypes";
 import util from "util";
 
 /**
@@ -48,33 +48,71 @@ export async function refreshToken() {
  * @returns UsersResponse[]
  */
 export async function getUsers() {
-  type UsersResponse = {
+  type Email = {
+    value: string,
+    primary: boolean
+  };
+  type SchemaExtensionEnterprise1 = {
+    manager: {
+      managerId: string
+    }
+  };
+  type Resource = {
     schemas: string[],
     id: string,
     userName: string,
-    title: string
+    title: string,
+    active: boolean,
+    emails: Email[],
+    "urn:scim:schemas:extension:enterprise:1.0"? : SchemaExtensionEnterprise1
+  };
+  type UsersResponse = {
+    totalResults: number,
+    itemsPerPage: number,
+    startIndex: number,
+    schemas: string[],
+    Resources: Resource[]
   };
   const slackBotToken = await refreshToken();
 
-  const url = "https://api.slack.com/scim/v1/Users";
+  const users: SlackAtlasUser[] = [];
+  let totalResults = 0;
+  let startIndex = 1;
+  let morePages = true;
+  const count = 10;
+  let url = `https://api.slack.com/scim/v1/Users?count=${count}&startIndex=${startIndex}`;
   const config: AxiosRequestConfig = {
     headers: { 
       "Authorization": `Bearer ${slackBotToken}`
     }
   };
-  const usersResponse = await axios.get<UsersResponse[]>(url, config);
+  // Deal with pagination as per https://api.slack.com/changelog/2019-06-have-scim-will-paginate
+  while(morePages) {
+    const usersResponse = await axios.get<UsersResponse>(url, config);
+    totalResults += usersResponse.data.itemsPerPage;
+    morePages = totalResults < usersResponse.data.totalResults;
+    startIndex += usersResponse.data.itemsPerPage;
+    url = `https://api.slack.com/scim/v1/Users?count=${count}&startIndex=${startIndex}`;
 
-  console.log(`usersResponse.data: ${util.inspect(usersResponse.data, true, 99)}`);
+    for(const resource of usersResponse.data.Resources) {
+      let emailValue = "";
+      for(const email of resource.emails) {
+        if(email.primary) {
+          emailValue = email.value;
+        }
+      }
+      const user: SlackAtlasUser = {
+        id: resource.id,
+        userName: resource.userName,
+        email: emailValue,
+        title: resource.title,
+        managerId: resource["urn:scim:schemas:extension:enterprise:1.0"]?.manager.managerId,
+        active: resource.active
+      };
+      users.push(user);
+    }
 
-  const users: User[] = [];
-  for(const userResponse of usersResponse.data) {
-    const user:User = {
-      id: userResponse.id,
-      userName: userResponse.userName,
-      title: userResponse.title,
-      managerId: undefined
-    };
-    users.push(user);
+    console.log(`usersResponse.data: ${util.inspect(usersResponse.data, true, 99)}`);
   }
 
   return users;
