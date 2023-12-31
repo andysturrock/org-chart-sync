@@ -12,6 +12,7 @@ import './App.css';
 import Button from 'react-bootstrap/Button';
 import {SilentRequest} from '@azure/msal-browser';
 import {SlackAtlasUser, getSlackHierarchy} from './slack';
+import {SlackAtlasDataDiv} from './components/SlackAtlasDataDiv';
 
 /**
 * Renders information about the signed-in user or a button to retrieve data about the user
@@ -87,32 +88,35 @@ function AADHierarchyContent() {
 function SlackHierarchyContent() {
   const {instance, accounts} = useMsal();
   const [slackAtlasUsers, setSlackAtlasUsers] = useState<SlackAtlasUser[]>();
+  const [buttonDisabled, setButtonDisabled] = useState(false);
 
   const silentRequest: SilentRequest = {
     scopes: slackHierarchyAPIScopes.scopes,
     account: accounts[0]
   };
 
+  
   async function slackHierarchyData(): Promise<void> {
+    setButtonDisabled(true);
     // Silently acquires an access token which is then attached to a request for MS Graph data
     const authenticationResult = await instance.acquireTokenSilent(silentRequest);
     // console.log(`authenticationResult for slackHierarchyData: ${inspect(authenticationResult, true, 99)}`);
     console.log(`authenticationResult.accessToken for slackHierarchyData: ${inspect(authenticationResult.accessToken, true, 99)}`);
     const slackAtlasUsers = await getSlackHierarchy(authenticationResult.accessToken);
     setSlackAtlasUsers(slackAtlasUsers);
+    setButtonDisabled(false);
   }
+  const buttonText = buttonDisabled? "Getting Slack Atlas data...": "Get Slack Atlas data";
   return (
     <>
       {slackAtlasUsers ? (
-        <label>
-          TODO Slack Org Data coming here.
-        </label>
+        <SlackAtlasDataDiv slackAtlasUsers={slackAtlasUsers} />
       )
         :
         (
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          <Button variant="secondary" onClick={slackHierarchyData}>
-          Get Slack Hierarchy Information
+          <Button variant="secondary" onClick={slackHierarchyData} disabled={buttonDisabled}>
+            {buttonText}
           </Button>
         )
       }
