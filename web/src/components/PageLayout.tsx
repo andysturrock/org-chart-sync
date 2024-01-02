@@ -30,15 +30,6 @@ export function PageLayout(props: PageLayoutProps) {
           <AADSignInOutButton isAuthenticated={isAuthenticatedWithAAD} />
         </div>
       </Navbar>
-      <br />
-      <br />
-      <h5>
-        <center>
-          This app helps sync the Azure Active Directory and Slack Atlas with the provided org chart file.
-        </center>
-      </h5>
-      <br />
-      <br />
       {props.children}
     </>
   );

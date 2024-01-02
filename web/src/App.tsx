@@ -1,9 +1,7 @@
 import {useState} from 'react';
 import inspect from 'browser-util-inspect';
-import {PageLayout} from './components/PageLayout';
 import {graphAPIScopes, slackHierarchyAPIScopes} from './authConfig';
-import {AADManagerData, ProfileData, getAADHierarchy, getProfileData} from './graph';
-import {ProfileDataDiv} from './components/ProfileDataDiv';
+import {AADManagerData, getAADHierarchy} from './graph';
 
 import {AuthenticatedTemplate, UnauthenticatedTemplate, useMsal} from '@azure/msal-react';
 
@@ -13,36 +11,20 @@ import Button from 'react-bootstrap/Button';
 import {SilentRequest} from '@azure/msal-browser';
 import {SlackAtlasUser, getSlackHierarchy} from './slack';
 import {SlackAtlasDataDiv} from './components/SlackAtlasDataDiv';
+import {PageLayout} from './components/PageLayout';
+import {FileSection} from './components/FileSection';
 
 /**
 * Renders information about the signed-in user or a button to retrieve data about the user
 */
 function ProfileContent() {
-  const {instance, accounts} = useMsal();
-  const [graphData, setGraphData] = useState<ProfileData>();
-
-  async function RequestProfileData() {
-    // Silently acquires an access token which is then attached to a request for MS Graph data
-    const authenticationResult = await instance.acquireTokenSilent({
-      ...graphAPIScopes,
-      account: accounts[0],
-    });
-    const profileData = await getProfileData(authenticationResult.accessToken);
-    setGraphData(profileData);
-  }
+  const {accounts} = useMsal();
 
   return (
     <>
+      <hr />
       <h5 className="card-title">Welcome {accounts[0].name}</h5>
       <br />
-      {graphData ? (
-        <ProfileDataDiv graphData={graphData} />
-      ) : (
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        <Button variant="secondary" onClick={RequestProfileData}>
-          Request Profile Information
-        </Button>
-      )}
     </>
   );
 }
@@ -64,7 +46,8 @@ function AADHierarchyContent() {
 
   return (
     <>
-      <h5 className="card-title">Welcome {accounts[0].name}</h5>
+      <hr />
+      <h5 className="card-title">AAD data</h5>
       <br />
       {managerData ? (
         <label>
@@ -95,7 +78,6 @@ function SlackHierarchyContent() {
     account: accounts[0]
   };
 
-  
   async function slackHierarchyData(): Promise<void> {
     setButtonDisabled(true);
     // Silently acquires an access token which is then attached to a request for MS Graph data
@@ -109,6 +91,9 @@ function SlackHierarchyContent() {
   const buttonText = buttonDisabled? "Getting Slack Atlas data...": "Get Slack Atlas data";
   return (
     <>
+      <hr />
+      <h5 className="card-title">Slack Atlas data</h5>
+      <br />
       {slackAtlasUsers ? (
         <SlackAtlasDataDiv slackAtlasUsers={slackAtlasUsers} />
       )
@@ -131,7 +116,15 @@ function MainContent() {
   return (
     <div className="App">
       <AuthenticatedTemplate>
+        <br />
+        <br />
+        <h5>
+          <center>
+          This app helps sync the Azure Active Directory and Slack Atlas with a structure defined in a file.
+          </center>
+        </h5>
         <ProfileContent />
+        <FileSection />
         <AADHierarchyContent />
         <SlackHierarchyContent />
       </AuthenticatedTemplate>
@@ -139,7 +132,7 @@ function MainContent() {
       <UnauthenticatedTemplate>
         <h5>
           <center>
-            Please sign-in to Azure Active Directory and Slack using the buttons above.
+            Please sign-in.
           </center>
         </h5>
       </UnauthenticatedTemplate>

@@ -27,7 +27,7 @@ export function AADSignInOutButton(aadSignInOutButtonProps: AADSignInOutButtonPr
   };
 
   const handler = aadSignInOutButtonProps.isAuthenticated ? handleLogout : handleLogin;
-  const title = aadSignInOutButtonProps.isAuthenticated ? "Sign Out of AAD" : "Sign In to AAD";
+  const title = aadSignInOutButtonProps.isAuthenticated ? "Sign Out" : "Sign In";
 
   return (
     <Button

@@ -25,6 +25,6 @@ export const SignIn: Story = {
 
 export const SignOut: Story = {
   args: {
-    isAuthenticated: false
+    isAuthenticated: true
   },
 };
