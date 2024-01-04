@@ -1,27 +1,26 @@
 import 'source-map-support/register';
 import * as util from 'util';
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {getUsers} from './slackAPI';
 import {getSecretValue} from './awsAPI';
 
 /**
- * Handle the request for Slack Atlas hierarchy
- * @param event the event from the API requesting the hierarchy
+ * Handle the request for POST to Slack Atlas
+ * @param event the event from the API requesting the data
  * @returns HTTP 200 with both containing hierarchy information.
  */
-export async function handleGetSlackAtlasHierarchy(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+export async function handlePostSlackAtlasData(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
     console.log(`event: ${util.inspect(event, true, 99)}`);
 
     const accessControlAllowOrigin = await getSecretValue('OrgChartSync', 'Access-Control-Allow-Origin');
     
-    const users = await getUsers();
+    const body = "Hello World";
     const result: APIGatewayProxyResult = {
       headers: {
         "Access-Control-Allow-Origin" : accessControlAllowOrigin,
         "Access-Control-Allow-Credentials" : true
       },
-      body: JSON.stringify(users),
+      body: JSON.stringify(body),
       statusCode: 200
     };
 

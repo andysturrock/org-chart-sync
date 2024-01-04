@@ -5,10 +5,11 @@ set -eo pipefail
 echo "Deleting old bundles..."
 rm -rf ../lambda-src/dist
 
-lambdas="handleGetSlackAtlasHierarchy \
- handleGetSlackAtlasHierarchyAuthorizer \
- handleSlackAuthRedirect \
- rotateSlackRefreshToken"
+lambdas="handleGetSlackAtlasData \
+  handlePostSlackAtlasData
+  handleSlackAtlasDataAuthorizer \
+  handleSlackAuthRedirect \
+  rotateSlackRefreshToken"
 
 for lambda in ${lambdas}
 do

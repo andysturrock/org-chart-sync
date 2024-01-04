@@ -18,15 +18,6 @@
       "Resource": "*"
     },
     {
-      "Sid": "cloudformation2",
-      "Effect": "Allow",
-      "Action": [
-        "cloudformation:DescribeStacks",
-        "cloudformation:CreateChangeSet"
-      ],
-      "Resource": "arn:aws:cloudformation:eu-west-2:__ACCOUNTID__:stack/SlashMeetDynamoDBStack/*"
-    },
-    {
       "Sid": "iam",
       "Effect": "Allow",
       "Action": [

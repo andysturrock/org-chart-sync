@@ -4,8 +4,7 @@ import {APIGatewayAuthorizerResult, APIGatewayTokenAuthorizerEvent} from 'aws-la
 import {generatePolicy, validateToken} from './authorization';
 import {getSecretValue} from './awsAPI';
 
-//function handleGetSlackAtlasHierarchyAuthorizer(event: APIGatewayTokenAuthorizerEvent): Promise<AuthResponse> {
-export async function handleGetSlackAtlasHierarchyAuthorizer(event: APIGatewayTokenAuthorizerEvent): Promise<APIGatewayAuthorizerResult> {
+export async function handleSlackAtlasDataAuthorizer(event: APIGatewayTokenAuthorizerEvent): Promise<APIGatewayAuthorizerResult> {
   try {
     // The jwks uri comes from the tenant and client id of the app registration for the back end/API.
     // It's this app registration that has issued and signed the JWT.
@@ -17,7 +16,6 @@ export async function handleGetSlackAtlasHierarchyAuthorizer(event: APIGatewayTo
     const issuer = `https://login.microsoftonline.com/${tenantId}/v2.0`;
     // The audience is the target of the JWT - in this case the client ID of the app registration for the API.
     const audience = backEndClientId;
-    // const signingSecret = await getSecretValue('SlashMeet', 'slackSigningSecret');
 
     const token = event.authorizationToken.replace('Bearer ', '');
     const validToken = await validateToken(token, jwksUri, issuer, audience);
