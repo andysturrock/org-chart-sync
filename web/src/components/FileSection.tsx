@@ -13,9 +13,26 @@ export type FileUser = {
   manager: FileUser | undefined
 };
 
+enum FixAction {
+  // constant members
+  AddSlackUser = "Add user to Slack",
+  AddSlackManager = "Add manager in Slack",
+  UpdateSlackManager = "Update manager in Slack",
+  RemoveSlackManager = "Remove manager in Slack",
+  CannotFix = "Cannot fix"
+}
+
+type FileVsSlackDifference = {
+  fileUser: FileUser,
+  slackUser: SlackAtlasUser | undefined,
+  newSlackManager: SlackAtlasUser | undefined,
+  fileManager: FileUser | undefined,
+  fixAction: FixAction | undefined
+};
+
 type FileSectionState = {
   selectedFile: File | null,
-  fileVsSlackDifferences: string[] | undefined
+  fileVsSlackDifferences: FileVsSlackDifference[] | undefined
 };
 
 type FileSectionProps = {
@@ -100,22 +117,65 @@ export class FileSection extends Component<FileSectionProps, FileSectionState> {
   }
 
   private compareWithSlack() {
-    const differences: string[] = [];
+    const differences: FileVsSlackDifference[] = [];
     // This function shouldn't be called without this.props.fileUsers being populated
     // but the Typescript transpiler doesn't know that so add a guard here.
     if(this.props.fileUsers) {
       for(const [email, fileUser] of this.props.fileUsers) {
         console.log(`Checking file user: ${inspect(fileUser, false, 99)}`);
+        const fileVsSlackDifference: FileVsSlackDifference = {
+          fileUser: fileUser,
+          slackUser: undefined,
+          newSlackManager: undefined,
+          fileManager: undefined,
+          fixAction: undefined
+        };
         const slackUser = this.props.slackAtlasUsers?.get(email);
         if(slackUser) {
+          fileVsSlackDifference.slackUser = slackUser;
           console.log(`Found Slack user: ${inspect(slackUser, false, 99)}`);
-          if(fileUser.manager?.email !== slackUser.manager?.email) {
-            differences.push(`User ${email} has manager ${inspect(fileUser.manager?.email)} \
-            in the file and manager ${inspect(slackUser.manager?.email)} in Slack`);
+          // Manager is in the file but missing in Slack
+          if(fileUser.manager && !slackUser.manager) {
+            fileVsSlackDifference.fileManager = fileUser.manager;
+            // Try to find the manager in Slack
+            fileVsSlackDifference.newSlackManager = this.props.slackAtlasUsers?.get(fileUser.manager.email);
+            if(fileVsSlackDifference.newSlackManager) {
+              fileVsSlackDifference.fixAction = FixAction.AddSlackManager;
+            }
+            else {
+              fileVsSlackDifference.fixAction = FixAction.CannotFix;
+            }
+            differences.push(fileVsSlackDifference);
+          }
+          // Manager is not set in the file but is set in Slack
+          else if(!fileUser.manager && slackUser.manager) {
+            fileVsSlackDifference.newSlackManager = undefined;
+            fileVsSlackDifference.fixAction = FixAction.RemoveSlackManager;
+            differences.push(fileVsSlackDifference);
+          }
+          // Manager in the file and Slack but different
+          else if(fileUser.manager && slackUser.manager && 
+            fileUser.manager.email !== slackUser.manager.email) {
+            // Try to find the manager in Slack
+            fileVsSlackDifference.newSlackManager = this.props.slackAtlasUsers?.get(fileUser.manager.email);
+            if(fileVsSlackDifference.newSlackManager) {
+              fileVsSlackDifference.fixAction = FixAction.UpdateSlackManager;  
+            }
+            else {
+              // This is probably a logic error
+              fileVsSlackDifference.fixAction = FixAction.CannotFix;
+            }
+            differences.push(fileVsSlackDifference);
           }
         }
+        // Person is in the file but not in Slack
         else {
-          differences.push(`User ${email} is in the file but not in Slack`);
+          if(fileUser.manager) {
+            // Try to find the manager in Slack
+            fileVsSlackDifference.newSlackManager = this.props.slackAtlasUsers?.get(fileUser.manager.email);
+          }
+          fileVsSlackDifference.fixAction = FixAction.AddSlackUser;
+          differences.push(fileVsSlackDifference);
         }
       }
     }
@@ -161,8 +221,13 @@ export class FileSection extends Component<FileSectionProps, FileSectionState> {
     }
   }
 
-  private onClick() {
+  private onSelectFileButtonClick() {
     this.hiddenFileInput.current?.click();
+  }
+
+  private onFixInSlackButtonClick() {
+    // TODO
+    console.log("Fix in Slack");
   }
 
   render() {
@@ -183,7 +248,7 @@ export class FileSection extends Component<FileSectionProps, FileSectionState> {
             variant="secondary"
             className="ml-auto"
             title="Select File"
-            onClick={this.onClick.bind(this)}>
+            onClick={this.onSelectFileButtonClick.bind(this)}>
               Select File
           </Button>
         </div>
@@ -209,24 +274,49 @@ export class FileSection extends Component<FileSectionProps, FileSectionState> {
       }
       else {
         return (
-          <table style={{width: 1500}}>
-            <thead>
-              <tr>
-                <th style={{textAlign: "left"}}>Differences File vs Slack</th>
-              </tr>
-            </thead>
-            <tbody>
-              { this.state.fileVsSlackDifferences.map((difference) => {
-                return (
-                  <tr>
-                    <td style={{textAlign: "left"}}>
-                      {difference}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div>
+            <h6 className="card-title">No differences</h6>
+            <table style={{width: 1500}}>
+              <thead>
+                <tr>
+                  <th style={{textAlign: "left"}}>Email address</th>
+                  <th style={{textAlign: "left"}}>Slack username</th>
+                  <th style={{textAlign: "left"}}>Manager in file</th>
+                  <th style={{textAlign: "left"}}>Manager in Slack</th>
+                  <th style={{textAlign: "left"}}>Fix action</th>
+                </tr>
+              </thead>
+              <tbody>
+                { this.state.fileVsSlackDifferences.map((difference) => {
+                  return (
+                    <tr>
+                      <td style={{textAlign: "left"}}>
+                        { difference.fileUser.email }
+                      </td>
+                      <td style={{textAlign: "left"}}>
+                        { difference.slackUser?.userName }
+                      </td>
+                      <td style={{textAlign: "left"}}>
+                        { difference.fileManager?.email }
+                      </td>
+                      <td style={{textAlign: "left"}}>
+                        { difference.slackUser?.manager?.email }
+                      </td>
+                      <td style={{textAlign: "left"}}>
+                        <Button
+                          variant="secondary"
+                          className="ml-auto"
+                          title="Select File"
+                          onClick={this.onFixInSlackButtonClick.bind(this)}>
+                          { difference.fixAction }
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         );
       }
     }
