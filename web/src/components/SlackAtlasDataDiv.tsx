@@ -1,7 +1,7 @@
 import React from "react";
-import {SlackAtlasUser} from "../slack";
+import {SlackAtlasUser} from "./SlackSection";
 type SlackAtlasDataProps = {
-  slackAtlasUsers: SlackAtlasUser[]
+  slackAtlasUsers: Map<string, SlackAtlasUser>
 };
 
 /**
@@ -12,7 +12,7 @@ export function SlackAtlasDataDiv(props: SlackAtlasDataProps) {
   return (
     <div id="slack-atlas-data-div">
       <label>
-        Number of users: {props.slackAtlasUsers.length}
+        Number of users: {props.slackAtlasUsers.size}
       </label>
     </div>
   );

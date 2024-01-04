@@ -1,6 +1,5 @@
 import {useState} from 'react';
-import inspect from 'browser-util-inspect';
-import {graphAPIScopes, slackHierarchyAPIScopes} from './authConfig';
+import {graphAPIScopes} from './authConfig';
 import {AADManagerData, getAADHierarchy} from './graph';
 
 import {AuthenticatedTemplate, UnauthenticatedTemplate, useMsal} from '@azure/msal-react';
@@ -9,10 +8,9 @@ import './App.css';
 
 import Button from 'react-bootstrap/Button';
 import {SilentRequest} from '@azure/msal-browser';
-import {SlackAtlasUser, getSlackHierarchy} from './slack';
-import {SlackAtlasDataDiv} from './components/SlackAtlasDataDiv';
 import {PageLayout} from './components/PageLayout';
-import {FileSection} from './components/FileSection';
+import {FileSection, FileUser} from './components/FileSection';
+import {SlackAtlasUser, SlackSection} from "./components/SlackSection";
 
 /**
 * Renders information about the signed-in user or a button to retrieve data about the user
@@ -68,51 +66,12 @@ function AADHierarchyContent() {
   );
 }
 
-function SlackHierarchyContent() {
-  const {instance, accounts} = useMsal();
-  const [slackAtlasUsers, setSlackAtlasUsers] = useState<SlackAtlasUser[]>();
-  const [buttonDisabled, setButtonDisabled] = useState(false);
-
-  const silentRequest: SilentRequest = {
-    scopes: slackHierarchyAPIScopes.scopes,
-    account: accounts[0]
-  };
-
-  async function slackHierarchyData(): Promise<void> {
-    setButtonDisabled(true);
-    // Silently acquires an access token which is then attached to a request for MS Graph data
-    const authenticationResult = await instance.acquireTokenSilent(silentRequest);
-    // console.log(`authenticationResult for slackHierarchyData: ${inspect(authenticationResult, true, 99)}`);
-    console.log(`authenticationResult.accessToken for slackHierarchyData: ${inspect(authenticationResult.accessToken, true, 99)}`);
-    const slackAtlasUsers = await getSlackHierarchy(authenticationResult.accessToken);
-    setSlackAtlasUsers(slackAtlasUsers);
-    setButtonDisabled(false);
-  }
-  const buttonText = buttonDisabled? "Getting Slack Atlas data...": "Get Slack Atlas data";
-  return (
-    <>
-      <hr />
-      <h5 className="card-title">Slack Atlas data</h5>
-      <br />
-      {slackAtlasUsers ? (
-        <SlackAtlasDataDiv slackAtlasUsers={slackAtlasUsers} />
-      )
-        :
-        (
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          <Button variant="secondary" onClick={slackHierarchyData} disabled={buttonDisabled}>
-            {buttonText}
-          </Button>
-        )
-      }
-    </>
-  );
-}
-
 /**
 * If a user is authenticated the ProfileContent component above is rendered. Otherwise a message indicating a user is not authenticated is rendered.
 */
 function MainContent() {
+  const [slackAtlasUsers, setSlackAtlasUsers] = useState<Map<string, SlackAtlasUser>>();
+  const [fileUsers, setFileUsers] = useState<Map<string, FileUser>>();
   return (
     <div className="App">
       <AuthenticatedTemplate>
@@ -124,9 +83,9 @@ function MainContent() {
           </center>
         </h5>
         <ProfileContent />
-        <FileSection />
+        <FileSection fileUsers={fileUsers} setFileUsers={setFileUsers} slackAtlasUsers={slackAtlasUsers}/>
         <AADHierarchyContent />
-        <SlackHierarchyContent />
+        <SlackSection slackAtlasUsers={slackAtlasUsers} setSlackAtlasUsers={setSlackAtlasUsers} fileUsers={undefined}/>
       </AuthenticatedTemplate>
 
       <UnauthenticatedTemplate>

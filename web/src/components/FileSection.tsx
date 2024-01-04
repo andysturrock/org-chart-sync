@@ -1,33 +1,148 @@
 import {Component, ChangeEvent, createRef} from "react";
 import {Button} from "react-bootstrap";
+import {SlackAtlasUser} from "./SlackSection";
+import {inspect} from "util";
+
+export type FileUser = {
+  id: string,
+  firstName: string,
+  lastName: string,
+  title: string,
+  email: string,
+  managerId: string | undefined
+  manager: FileUser | undefined
+};
 
 type FileSectionState = {
-  selectedFile: File | null
+  selectedFile: File | null,
+  fileVsSlackDifferences: string[] | undefined
 };
+
+type FileSectionProps = {
+  slackAtlasUsers: Map<string, SlackAtlasUser> | undefined,
+  fileUsers: Map<string, FileUser> | undefined,
+  setFileUsers: (fileUsers: Map<string, FileUser>) => void
+};
+
 /**
  * Renders information about the user obtained from MS Graph 
  * @param props
  */
-export class FileSection<PropsType> extends Component<PropsType, FileSectionState> {
+export class FileSection extends Component<FileSectionProps, FileSectionState> {
   private hiddenFileInput = createRef<HTMLInputElement>();
 
-  constructor(props: Readonly<PropsType> | PropsType) {
+  constructor(props: FileSectionProps) {
     super(props);
     this.state = {
-      selectedFile: null
+      selectedFile: null,
+      fileVsSlackDifferences: undefined
     };
   }
 
-  onFileChange(event: ChangeEvent<HTMLInputElement>) {
+  private onFileChange(event: ChangeEvent<HTMLInputElement>) {
     if(event.target.files) {
-    // Update the state
       this.setState({
         selectedFile: event.target.files[0],
       });
+
+      const filereader = new FileReader();
+      let fileContents = "";
+      const onLoad = () => {
+        // OK to cast here as we used readAsText to read the file so we know this will be a string.
+        // See https://developer.mozilla.org/en-US/docs/Web/API/FileReader/result
+        fileContents = filereader.result as string;
+        const fileUsers = this.buildFileHierarchy(fileContents);
+        this.props.setFileUsers(fileUsers);
+        this.setState({
+          fileVsSlackDifferences: undefined
+        });
+      };
+      filereader.addEventListener("load", onLoad);
+      filereader.readAsText(event.target.files[0]);
     }
   }
 
-  fileData() {
+  private buildFileHierarchy(fileContents: string) {
+    const email2FileUser = new Map<string, FileUser>();
+    const id2FileUser = new Map<string, FileUser>();
+    const lines = fileContents.split(/\n/);
+    // Start at lineNumber = 1 to skip the header line
+    for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
+      let line = lines[lineNumber];
+      // Get rid of any newline/return chars
+      line = line.replace(/\r/, "");
+      line = line.replace(/\n/, "");
+      if(line !== "") {
+        const fields = line.split(/,/);
+        const fileUser: FileUser = {
+          id: fields[0],
+          firstName: fields[1],
+          lastName: fields[2],
+          title: fields[3],
+          email: fields[4],
+          managerId: fields[5],
+          manager: undefined
+        };
+        // Ensure email is all lowercase as we'll use it as a Map key
+        fileUser.email = fileUser.email.toLowerCase();
+        email2FileUser.set(fileUser.email, fileUser);
+        id2FileUser.set(fileUser.id, fileUser);
+      }
+    }
+    // Now go over the email2FileUser list and set the manager references
+    for(const fileUser of email2FileUser.values()) {
+      if(fileUser.managerId) {
+        const manager = id2FileUser.get(fileUser.managerId);
+        fileUser.manager = manager;
+      }
+    }
+    return email2FileUser;
+  }
+
+  private compareWithSlack() {
+    const differences: string[] = [];
+    // This function shouldn't be called without this.props.fileUsers being populated
+    // but the Typescript transpiler doesn't know that so add a guard here.
+    if(this.props.fileUsers) {
+      for(const [email, fileUser] of this.props.fileUsers) {
+        console.log(`Checking file user: ${inspect(fileUser, false, 99)}`);
+        const slackUser = this.props.slackAtlasUsers?.get(email);
+        if(slackUser) {
+          console.log(`Found Slack user: ${inspect(slackUser, false, 99)}`);
+          if(fileUser.manager?.email !== slackUser.manager?.email) {
+            differences.push(`User ${email} has manager ${inspect(fileUser.manager?.email)} \
+            in the file and manager ${inspect(slackUser.manager?.email)} in Slack`);
+          }
+        }
+        else {
+          differences.push(`User ${email} is in the file but not in Slack`);
+        }
+      }
+    }
+    this.setState({
+      fileVsSlackDifferences: differences
+    });
+  }
+
+  private compareWithSlackButton() {
+    if(this.props.slackAtlasUsers && this.state.selectedFile) {
+      return (
+        <Button
+          variant="secondary"
+          className="ml-auto"
+          title="Compare with Slack Atlas"
+          onClick={this.compareWithSlack.bind(this)}>
+            Compare with Slack Atlas
+        </Button>
+      );
+    }
+    else return (
+      <>
+      </>
+    );
+  }
+
+  private fileData() {
     if(this.state.selectedFile) {
       return (
         <div>
@@ -41,13 +156,12 @@ export class FileSection<PropsType> extends Component<PropsType, FileSectionStat
       return (
         <div>
           <h6>No file selected</h6>
-                
         </div>
       );
     }
   }
 
-  onClick() {
+  private onClick() {
     this.hiddenFileInput.current?.click();
   }
 
@@ -73,8 +187,54 @@ export class FileSection<PropsType> extends Component<PropsType, FileSectionStat
               Select File
           </Button>
         </div>
-        {this.fileData()}
+        <div>
+          {this.fileData()}
+        </div>
+        <div>
+          {this.compareWithSlackButton()}
+        </div>
+        <div>
+          {this.fileVsSlackDifferencesList()}
+        </div>
       </div>
     );
+  }
+
+  fileVsSlackDifferencesList() {
+    if(this.props.slackAtlasUsers && this.state.selectedFile && this.state.fileVsSlackDifferences) {
+      if(this.state.fileVsSlackDifferences.length === 0) {
+        return (
+          <h6 className="card-title">No differences</h6>
+        );
+      }
+      else {
+        return (
+          <table style={{width: 1500}}>
+            <thead>
+              <tr>
+                <th style={{textAlign: "left"}}>Differences File vs Slack</th>
+              </tr>
+            </thead>
+            <tbody>
+              { this.state.fileVsSlackDifferences.map((difference) => {
+                return (
+                  <tr>
+                    <td style={{textAlign: "left"}}>
+                      {difference}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        );
+      }
+    }
+    else {
+      return (
+        <>
+        </>
+      );
+    }
   }
 }
