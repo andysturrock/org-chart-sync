@@ -225,9 +225,9 @@ export class FileSection extends Component<FileSectionProps, FileSectionState> {
     this.hiddenFileInput.current?.click();
   }
 
-  private onFixInSlackButtonClick() {
+  private onFixInSlackButtonClick(difference: FileVsSlackDifference) {
     // TODO
-    console.log("Fix in Slack");
+    console.log(`Fix: ${inspect(difference, false, 99)}`);
   }
 
   render() {
@@ -307,7 +307,7 @@ export class FileSection extends Component<FileSectionProps, FileSectionState> {
                           variant="secondary"
                           className="ml-auto"
                           title="Select File"
-                          onClick={this.onFixInSlackButtonClick.bind(this)}>
+                          onClick={this.onFixInSlackButtonClick.bind(this, difference)}>
                           { difference.fixAction }
                         </Button>
                       </td>
