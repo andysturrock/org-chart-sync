@@ -6,7 +6,8 @@ echo "Deleting old bundles..."
 rm -rf ../lambda-src/dist
 
 lambdas="handleGetSlackAtlasData \
-  handlePostSlackAtlasData
+  handlePostSlackAtlasData \
+  handlePatchSlackAtlasData \
   handleSlackAtlasDataAuthorizer \
   handleSlackAuthRedirect \
   rotateSlackRefreshToken"

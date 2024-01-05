@@ -59,13 +59,11 @@ export const msalConfig = {
 export const graphAPIScopes = {
   // TODO get from env
   scopes: ["User.Read", "User.ReadBasic.All", "Directory.Read.All"]
-  //scopes: ["e4147363-04f1-48c7-bb73-3e9b8fe13267/.default"]
 };
 
-export const slackHierarchyAPIScopes = {
+export const slackAtlasDataAPIScopes = {
   // TODO get from env
-  scopes: ["api://6230a233-33d3-414b-ae9d-ae7995628e26/OrgHierarchy.Read"]
-  //scopes: ["e4147363-04f1-48c7-bb73-3e9b8fe13267/.default"]
+  scopes: ["api://6230a233-33d3-414b-ae9d-ae7995628e26/SlackAtlas.Write"]
 };
 
 /**
@@ -77,5 +75,5 @@ export const graphConfig = {
 };
 
 export const slackConfig = {
-  slackAtlasEndpoint: "https://orgchartsync.slackapps.atombank.co.uk/0_0_1/slack-atlas-hierarchy"
+  slackAtlasEndpoint: "https://orgchartsync.slackapps.atombank.co.uk/0_0_1/slack-atlas-data"
 };

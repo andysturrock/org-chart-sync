@@ -7,7 +7,7 @@ import {getSecretValue} from './awsAPI';
 /**
  * Handle the request for Slack Atlas data
  * @param event the event from the API requesting the data
- * @returns HTTP 200 with both containing hierarchy information.
+ * @returns HTTP 200 with body containing Atlas information.
  */
 export async function handleGetSlackAtlasData(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
@@ -42,7 +42,7 @@ export async function handleGetSlackAtlasData(event: APIGatewayProxyEvent): Prom
         "Access-Control-Allow-Credentials" : true
       },
       body: JSON.stringify(json),
-      statusCode: 200
+      statusCode: 500
     };
     return result;
   }

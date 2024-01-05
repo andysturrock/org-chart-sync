@@ -275,7 +275,7 @@ export class FileSection extends Component<FileSectionProps, FileSectionState> {
       else {
         return (
           <div>
-            <h6 className="card-title">No differences</h6>
+            <h6 className="card-title">Differences file vs Slack</h6>
             <table style={{width: 1500}}>
               <thead>
                 <tr>
@@ -289,7 +289,7 @@ export class FileSection extends Component<FileSectionProps, FileSectionState> {
               <tbody>
                 { this.state.fileVsSlackDifferences.map((difference) => {
                   return (
-                    <tr>
+                    <tr key={difference.fileUser.email}>
                       <td style={{textAlign: "left"}}>
                         { difference.fileUser.email }
                       </td>

@@ -1,7 +1,7 @@
 import 'source-map-support/register';
 import {APIGatewayAuthorizerResult, PolicyDocument, Statement} from 'aws-lambda';
 import {JwksClient} from 'jwks-rsa';
-import {verify, decode, VerifyOptions, Algorithm, JwtHeader} from 'jsonwebtoken';
+import {verify, decode, VerifyOptions, Algorithm, JwtHeader, Jwt} from 'jsonwebtoken';
 
 /**
  * Validate a JWT token contained in an APIGatewayTokenAuthorizerEvent.
@@ -30,7 +30,7 @@ export async function validateToken(token: string, jwksUri: string, issuer: stri
       audience,
       complete: true
     };
-    const verifiedToken = verify(token, publicKey, verifyOptions);
+    const verifiedToken = verify(token, publicKey, verifyOptions) as Jwt;
 
     return verifiedToken;
   } catch (error) {

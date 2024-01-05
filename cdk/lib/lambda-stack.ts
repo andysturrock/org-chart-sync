@@ -25,7 +25,7 @@ export class LambdaStack extends Stack {
         NODE_OPTIONS: '--enable-source-maps',
       },
       logRetention: logs.RetentionDays.THREE_DAYS,
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       timeout: Duration.seconds(30),
     };
 
@@ -80,6 +80,17 @@ export class LambdaStack extends Stack {
     props.orgChartSyncSecret.grantRead(handlePostSlackAtlasDataLambda);
     props.orgChartSyncSecret.grantWrite(handlePostSlackAtlasDataLambda);
 
+    // The lambda for PATCHing the Slack Atlas data
+    const handlePatchSlackAtlasDataLambda = new lambda.Function(this, "handlePatchSlackAtlasDataLambda", {
+      handler: "handlePatchSlackAtlasData.handlePatchSlackAtlasData",
+      functionName: 'OrgChartSync-handlePatchSlackAtlasData',
+      code: lambda.Code.fromAsset("../lambda-src/dist/handlePatchSlackAtlasData"),
+      ...allLambdaProps
+    });
+    // Allow read/write access to the secret it needs
+    props.orgChartSyncSecret.grantRead(handlePatchSlackAtlasDataLambda);
+    props.orgChartSyncSecret.grantWrite(handlePatchSlackAtlasDataLambda);
+
     // The lambda which acts as an authorizer for the Slack Atlas Data lambdas
     const handleSlackAtlasDataAuthorizerLambda = new lambda.Function(this, "handleSlackAtlasDataAuthorizerLambda", {
       handler: "handleSlackAtlasDataAuthorizer.handleSlackAtlasDataAuthorizer",
@@ -91,10 +102,16 @@ export class LambdaStack extends Stack {
     props.orgChartSyncSecret.grantRead(handleSlackAtlasDataAuthorizerLambda);
 
     // Add the lambda as a token authorizer to the API Gateway
-    const handleSlackAtlasDataAuthorizer = new apigateway.TokenAuthorizer(this, 'handleSlackAtlasDataAuthorizer', {
+    // const handleSlackAtlasDataAuthorizer = new apigateway.TokenAuthorizer(this, 'handleSlackAtlasDataAuthorizer', {
+    //   handler: handleSlackAtlasDataAuthorizerLambda,
+    //   authorizerName: 'handleSlackAtlasDataAuthorizer',
+    //   resultsCacheTtl: Duration.seconds(0)
+    // });
+    const handleSlackAtlasDataAuthorizer = new apigateway.RequestAuthorizer(this, 'handleSlackAtlasDataAuthorizer', {
       handler: handleSlackAtlasDataAuthorizerLambda,
       authorizerName: 'handleSlackAtlasDataAuthorizer',
-      resultsCacheTtl: Duration.seconds(0)
+      resultsCacheTtl: Duration.seconds(0),
+      identitySources: ["method.request.header.Authorization"]
     });
 
     // Get hold of the hosted zone which has previously been created
@@ -150,14 +167,20 @@ export class LambdaStack extends Stack {
     const handlePostSlackAtlasDataLambdaIntegration = new apigateway.LambdaIntegration(handlePostSlackAtlasDataLambda, {
       requestTemplates: {"application/json": '{ "statusCode": "200" }'}
     });
+    const handlePatchSlackAtlasDataLambdaIntegration = new apigateway.LambdaIntegration(handlePatchSlackAtlasDataLambda, {
+      requestTemplates: {"application/json": '{ "statusCode": "200" }'}
+    });
     const handleSlackAuthRedirectResource = api.root.addResource('slack-oauth-redirect');
-    const handleSlackAtlasDataResource = api.root.addResource('slack-atlas-hierarchy');
+    const handleSlackAtlasDataResource = api.root.addResource('slack-atlas-data');
     // And add the methods.
     handleSlackAuthRedirectResource.addMethod("GET", handleSlackAuthRedirectLambdaIntegration);
     handleSlackAtlasDataResource.addMethod("GET", handleGetSlackAtlasDataLambdaIntegration, {
       authorizer: handleSlackAtlasDataAuthorizer
     });
     handleSlackAtlasDataResource.addMethod("POST", handlePostSlackAtlasDataLambdaIntegration, {
+      authorizer: handleSlackAtlasDataAuthorizer
+    });
+    handleSlackAtlasDataResource.addMethod("PATCH", handlePatchSlackAtlasDataLambdaIntegration, {
       authorizer: handleSlackAtlasDataAuthorizer
     });
 

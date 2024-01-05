@@ -2,11 +2,11 @@ import {useState} from "react";
 import {FileUser} from "./FileSection";
 import {useMsal} from "@azure/msal-react";
 import {SilentRequest} from "@azure/msal-browser";
-import {slackHierarchyAPIScopes} from "../authConfig";
+import {slackAtlasDataAPIScopes} from "../authConfig";
 import inspect from "browser-util-inspect";
 import {SlackAtlasDataDiv} from "./SlackAtlasDataDiv";
 import {Button} from "react-bootstrap";
-import {getSlackHierarchy} from "../slack";
+import {getSlackAtlasData} from "../slack";
 import {getDummySlackData} from "./getDummySlackData";
 
 export type SlackAtlasUser = {
@@ -16,7 +16,8 @@ export type SlackAtlasUser = {
   title: string,
   managerId: string | undefined,
   manager: SlackAtlasUser | undefined,
-  active: boolean
+  active: boolean,
+  userType: string | undefined
 };
 
 type SlackSectionProps = {
@@ -30,7 +31,7 @@ export function SlackSection(props: SlackSectionProps) {
   const [buttonDisabled, setButtonDisabled] = useState(false);
 
   const silentRequest: SilentRequest = {
-    scopes: slackHierarchyAPIScopes.scopes,
+    scopes: slackAtlasDataAPIScopes.scopes,
     account: accounts[0]
   };
 
@@ -38,10 +39,9 @@ export function SlackSection(props: SlackSectionProps) {
     setButtonDisabled(true);
     // Silently acquires an access token which is then attached to a request for MS Graph data
     const authenticationResult = await instance.acquireTokenSilent(silentRequest);
-    // console.log(`authenticationResult for slackHierarchyData: ${inspect(authenticationResult, true, 99)}`);
-    console.log(`authenticationResult.accessToken for slackHierarchyData: ${inspect(authenticationResult.accessToken, true, 99)}`);
-    // const slackAtlasUsers = await getSlackHierarchy(authenticationResult.accessToken);
-    const slackAtlasUsers = getDummySlackData();
+    console.log(`authenticationResult.accessToken for slackAtlasData API: ${inspect(authenticationResult.accessToken, true, 99)}`);
+    const slackAtlasUsers = await getSlackAtlasData(authenticationResult.accessToken);
+    // const slackAtlasUsers = getDummySlackData();
 
     // Convert the array into a map keyed by email address.
     const slackAtlasUserMap = new Map<string, SlackAtlasUser>();
@@ -50,8 +50,20 @@ export function SlackSection(props: SlackSectionProps) {
     const id2slackAtlasUserMap = new Map<string, SlackAtlasUser>();
     for(const slackAtlasUser of slackAtlasUsers) {
       console.log(`slackAtlasUser = ${inspect(slackAtlasUser)}`);
+      // Ignore non-active users
+      if(!slackAtlasUser.active) {
+        console.log(`Ignoring ${slackAtlasUser.email} as inactive`);
+        continue;
+      }
+      // Ignore bot users.  They have an email address ending in @slack-bots.com
+      if(slackAtlasUser.email.match(/@slack-bots.com$/)) {
+        console.log(`Ignoring ${slackAtlasUser.email} as bot user`);
+        continue;
+      }
       // Convert email to lowercase as sometimes it's stored in CamelCase
       slackAtlasUser.email = slackAtlasUser.email.toLowerCase();
+      // Also get rid of any +slackprofile part of the email address that was added.
+      slackAtlasUser.email = slackAtlasUser.email.replace('+slackprofile@', '@');
       slackAtlasUserMap.set(slackAtlasUser.email, slackAtlasUser);
       id2slackAtlasUserMap.set(slackAtlasUser.id, slackAtlasUser);
     }

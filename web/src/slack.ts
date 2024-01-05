@@ -3,7 +3,7 @@ import {slackConfig} from "./authConfig";
 import axios, {AxiosHeaders, AxiosRequestConfig} from "axios";
 import {SlackAtlasUser} from './components/SlackSection';
 
-export async function getSlackHierarchy(accessToken: string) {
+export async function getSlackAtlasData(accessToken: string) {
   const headers = new AxiosHeaders({
     'Authorization': `Bearer ${accessToken}`
   });

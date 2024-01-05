@@ -117,3 +117,38 @@ export async function getUsers() {
 
   return users;
 }
+
+/**
+ * 
+ * @param id Slack id of the user being updated
+ * @param managerId Slack id of the user's manager or null if removing the manaager
+ * @returns The manager of the id that was set
+ */
+export async function patchManager(id: string, managerId: string | null) {
+  const patchUsersRequest = {
+    "urn:scim:schemas:extension:enterprise:1.0": {
+      "manager": {
+        "managerId": managerId
+      }
+    }
+  };
+
+  const slackBotToken = await refreshToken();
+  const url = `https://api.slack.com/scim/v1/Users/${id}`;
+  const config: AxiosRequestConfig = {
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${slackBotToken}`
+    }
+  };
+  type SlackResponse = {
+    "urn:scim:schemas:extension:enterprise:1.0": {
+      manager: {
+          managerId: string
+      }
+  },
+  };
+  const slackResponse = await axios.patch<SlackResponse>(url, patchUsersRequest, config);
+  console.log(`patchManager slackResponse.data: ${util.inspect(slackResponse.data, true, 99)}`);
+  return slackResponse.data['urn:scim:schemas:extension:enterprise:1.0'].manager.managerId;
+}
