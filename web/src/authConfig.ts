@@ -74,6 +74,7 @@ export const graphConfig = {
   graphMeEndpoint: "https://graph.microsoft.com/v1.0/me",
 };
 
+// TODO get from env or build script
 export const slackConfig = {
   slackAtlasEndpoint: "https://orgchartsync.slackapps.atombank.co.uk/0_0_1/slack-atlas-data"
 };
