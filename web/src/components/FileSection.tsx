@@ -23,7 +23,8 @@ enum FixAction {
   UpdateSlackManager = "Update manager in Slack",
   RemoveSlackManager = "Remove manager in Slack",
   CannotFix = "Cannot fix",
-  Fixed = "Fixed"
+  Fixed = "Fixed",
+  Fixing = "Fixing"
 }
 
 type FileVsSlackDifference = {
@@ -172,9 +173,17 @@ function FileVsSlackDifferencesList(props: FileVsSlackDifferencesListProps) {
   async function onFixInSlackButtonClick(difference: FileVsSlackDifference) {
     // Copy the existing differences into a new Map and mutate that.
     // Otherwise the State doesn't update properly.
-    const fileVsSlackDifferences = new Map(props.fileVsSlackDifferences);
+    let fileVsSlackDifferences = new Map(props.fileVsSlackDifferences);
     switch(difference.fixAction) {
     case FixAction.AddSlackManager: {
+      let newDifference = fileVsSlackDifferences.get(difference.fileUser.email);
+      // Logic error
+      if(!newDifference) {
+        throw new Error("Cannot find difference in new Map");
+      }
+      newDifference.fixAction = FixAction.Fixing;
+      props.setFileVsSlackDifferences(fileVsSlackDifferences);
+
       const authenticationResult = await instance.acquireTokenSilent(silentRequest);
       // These are both logic errors.
       if(!difference.slackUser) {
@@ -187,7 +196,9 @@ function FileVsSlackDifferencesList(props: FileVsSlackDifferencesListProps) {
       
       const success = await patchSlackAtlasData(authenticationResult.accessToken, difference.slackUser.id, difference.newSlackManager.id);
 
-      const newDifference = fileVsSlackDifferences.get(difference.fileUser.email);
+      // TODO work out how to render each line separately and just trigger rerender of the specific line
+      fileVsSlackDifferences = new Map(fileVsSlackDifferences);
+      newDifference = fileVsSlackDifferences.get(difference.fileUser.email);
       // Logic error
       if(!newDifference) {
         throw new Error("Cannot find difference in new Map");
@@ -216,7 +227,8 @@ function FileVsSlackDifferencesList(props: FileVsSlackDifferencesListProps) {
       const tableRows: JSX.Element[] = [];
       for(const difference of props.fileVsSlackDifferences.values()) {
         const disabled = (difference.fixAction === FixAction.CannotFix ||
-        difference.fixAction === FixAction.Fixed);
+          difference.fixAction === FixAction.Fixed  ||
+          difference.fixAction === FixAction.Fixing);
         tableRows.push (
           <tr key={difference.fileUser.email}>
             <td style={{textAlign: "left"}}>
