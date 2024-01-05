@@ -4,7 +4,7 @@
  */
 
 type PageLayoutProps = {
-  children: any
+  children: React.ReactNode;
 };
 
 import React from "react";

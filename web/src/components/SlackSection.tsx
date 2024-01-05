@@ -41,7 +41,7 @@ export function SlackSection(props: SlackSectionProps) {
     const authenticationResult = await instance.acquireTokenSilent(silentRequest);
     console.log(`authenticationResult.accessToken for slackAtlasData API: ${inspect(authenticationResult.accessToken, true, 99)}`);
     const slackAtlasUsers = await getSlackAtlasData(authenticationResult.accessToken);
-    // const slackAtlasUsers = getDummySlackData();
+    //const slackAtlasUsers = getDummySlackData();
 
     // Convert the array into a map keyed by email address.
     const slackAtlasUserMap = new Map<string, SlackAtlasUser>();
@@ -49,7 +49,6 @@ export function SlackSection(props: SlackSectionProps) {
     // To do this use another map keyed by user id.
     const id2slackAtlasUserMap = new Map<string, SlackAtlasUser>();
     for(const slackAtlasUser of slackAtlasUsers) {
-      console.log(`slackAtlasUser = ${inspect(slackAtlasUser)}`);
       // Ignore non-active users
       if(!slackAtlasUser.active) {
         console.log(`Ignoring ${slackAtlasUser.email} as inactive`);
