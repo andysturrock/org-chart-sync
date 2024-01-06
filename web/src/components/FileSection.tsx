@@ -93,7 +93,7 @@ function CompareWithSlackButton(props: CompareWithSlackButtonProps) {
 
   function compareWithSlack() {
     const differences = new Map<string, FileVsSlackDifference>();
-    // This function shouldn't be called without this.props.fileUsers being populated
+    // This function shouldn't be called without props.fileUsers being populated
     // but the Typescript transpiler doesn't know that so add a guard here.
     if(props.fileUsers) {
       for(const [email, fileUser] of props.fileUsers) {
@@ -341,22 +341,29 @@ export function FileSection(props: FileSectionProps) {
   );
 
   function onFileChange(event: ChangeEvent<HTMLInputElement>) {
-    if(event.target.files) {
-      setSelectedFile(event.target.files[0]);
-  
-      const filereader = new FileReader();
-      let fileContents = "";
-      const onLoad = () => {
-        // OK to cast here as we used readAsText to read the file so we know this will be a string.
-        // See https://developer.mozilla.org/en-US/docs/Web/API/FileReader/result
-        fileContents = filereader.result as string;
-        const fileUsers = buildFileHierarchy(fileContents);
-        props.setFileUsers(fileUsers);
-        setFileVsSlackDifferences(undefined);
-      };
-      filereader.addEventListener("load", onLoad);
-      filereader.readAsText(event.target.files[0]);
+    // User clicks cancel
+    if(!event.target.files) {
+      return;
     }
+    // There's a sequence where you select a different file to the current one and then click
+    // cancel which results in event.target.files being set but empty.  Ignore this.
+    if(!event.target.files[0]) {
+      return;
+    }
+
+    setSelectedFile(event.target.files[0]);
+    const filereader = new FileReader();
+    let fileContents = "";
+    const onLoad = () => {
+      // OK to cast here as we used readAsText to read the file so we know this will be a string.
+      // See https://developer.mozilla.org/en-US/docs/Web/API/FileReader/result
+      fileContents = filereader.result as string;
+      const fileUsers = buildFileHierarchy(fileContents);
+      props.setFileUsers(fileUsers);
+      setFileVsSlackDifferences(undefined);
+    };
+    filereader.addEventListener("load", onLoad);
+    filereader.readAsText(event.target.files[0]);
   }
 
   function buildFileHierarchy(fileContents: string) {
