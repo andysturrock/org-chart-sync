@@ -3,9 +3,9 @@ import {Button} from "react-bootstrap";
 import {SlackAtlasUser} from "./SlackSection";
 import {inspect} from "util";
 import {useMsal} from "@azure/msal-react";
-import {SilentRequest} from "@azure/msal-browser";
+import {IPublicClientApplication, SilentRequest} from "@azure/msal-browser";
 import {slackAtlasDataAPIScopes} from "../authConfig";
-import {patchSlackAtlasData} from "../slack";
+import {patchSlackAtlasData, postSlackAtlasData} from "../slack";
 
 export type FileUser = {
   id: string,
@@ -18,7 +18,7 @@ export type FileUser = {
 };
 
 enum FixAction {
-  AddSlackUser = "Add user to Slack",
+  AddProfileOnlySlackUser = "Add profile-only user to Slack",
   AddSlackManager = "Add manager in Slack",
   UpdateSlackManager = "Update manager in Slack",
   RemoveSlackManager = "Remove manager in Slack",
@@ -30,7 +30,7 @@ enum FixAction {
 type FileVsSlackDifference = {
   fileUser: FileUser,
   slackUser: SlackAtlasUser | undefined,
-  newSlackManager: SlackAtlasUser | undefined,
+  slackManager: SlackAtlasUser | undefined,
   fileManager: FileUser | undefined,
   fixAction: FixAction | undefined
 };
@@ -100,7 +100,7 @@ function CompareWithSlackButton(props: CompareWithSlackButtonProps) {
         const fileVsSlackDifference: FileVsSlackDifference = {
           fileUser: fileUser,
           slackUser: undefined,
-          newSlackManager: undefined,
+          slackManager: undefined,
           fileManager: undefined,
           fixAction: undefined
         };
@@ -111,8 +111,8 @@ function CompareWithSlackButton(props: CompareWithSlackButtonProps) {
           if(fileUser.manager && !slackUser.manager) {
             fileVsSlackDifference.fileManager = fileUser.manager;
             // Try to find the manager in Slack
-            fileVsSlackDifference.newSlackManager = props.slackAtlasUsers?.get(fileUser.manager.email);
-            if(fileVsSlackDifference.newSlackManager) {
+            fileVsSlackDifference.slackManager = props.slackAtlasUsers?.get(fileUser.manager.email);
+            if(fileVsSlackDifference.slackManager) {
               fileVsSlackDifference.fixAction = FixAction.AddSlackManager;
             }
             else {
@@ -122,7 +122,7 @@ function CompareWithSlackButton(props: CompareWithSlackButtonProps) {
           }
           // Manager is not set in the file but is set in Slack
           else if(!fileUser.manager && slackUser.manager) {
-            fileVsSlackDifference.newSlackManager = undefined;
+            fileVsSlackDifference.slackManager = undefined;
             fileVsSlackDifference.fixAction = FixAction.RemoveSlackManager;
             differences.set(fileVsSlackDifference.fileUser.email, fileVsSlackDifference);
           }
@@ -130,8 +130,8 @@ function CompareWithSlackButton(props: CompareWithSlackButtonProps) {
           else if(fileUser.manager && slackUser.manager && 
             fileUser.manager.email !== slackUser.manager.email) {
             // Try to find the manager in Slack
-            fileVsSlackDifference.newSlackManager = props.slackAtlasUsers?.get(fileUser.manager.email);
-            if(fileVsSlackDifference.newSlackManager) {
+            fileVsSlackDifference.slackManager = props.slackAtlasUsers?.get(fileUser.manager.email);
+            if(fileVsSlackDifference.slackManager) {
               fileVsSlackDifference.fixAction = FixAction.UpdateSlackManager;  
             }
             else {
@@ -145,9 +145,9 @@ function CompareWithSlackButton(props: CompareWithSlackButtonProps) {
         else {
           if(fileUser.manager) {
             // Try to find the manager in Slack
-            fileVsSlackDifference.newSlackManager = props.slackAtlasUsers?.get(fileUser.manager.email);
+            fileVsSlackDifference.slackManager = props.slackAtlasUsers?.get(fileUser.manager.email);
           }
-          fileVsSlackDifference.fixAction = FixAction.AddSlackUser;
+          fileVsSlackDifference.fixAction = FixAction.AddProfileOnlySlackUser;
           differences.set(fileVsSlackDifference.fileUser.email, fileVsSlackDifference);
         }
       }
@@ -173,41 +173,19 @@ function FileVsSlackDifferencesList(props: FileVsSlackDifferencesListProps) {
   async function onFixInSlackButtonClick(difference: FileVsSlackDifference) {
     // Copy the existing differences into a new Map and mutate that.
     // Otherwise the State doesn't update properly.
-    let fileVsSlackDifferences = new Map(props.fileVsSlackDifferences);
+    const fileVsSlackDifferences = new Map(props.fileVsSlackDifferences);
     switch(difference.fixAction) {
-    case FixAction.AddSlackManager: {
-      let newDifference = fileVsSlackDifferences.get(difference.fileUser.email);
-      // Logic error
-      if(!newDifference) {
-        throw new Error("Cannot find difference in new Map");
-      }
-      newDifference.fixAction = FixAction.Fixing;
-      props.setFileVsSlackDifferences(fileVsSlackDifferences);
-
-      const authenticationResult = await instance.acquireTokenSilent(silentRequest);
-      // These are both logic errors.
-      if(!difference.slackUser) {
-        throw new Error("Missing Slack user");
-      }
-      if(!difference.newSlackManager) {
-        throw new Error("Missing Slack new manager");
-      }
-      console.log(`Update manager on ${difference.slackUser.id} to ${difference.newSlackManager.id}`);
-      
-      const success = await patchSlackAtlasData(authenticationResult.accessToken, difference.slackUser.id, difference.newSlackManager.id);
-
-      // TODO work out how to render each line separately and just trigger rerender of the specific line
-      fileVsSlackDifferences = new Map(fileVsSlackDifferences);
-      newDifference = fileVsSlackDifferences.get(difference.fileUser.email);
-      // Logic error
-      if(!newDifference) {
-        throw new Error("Cannot find difference in new Map");
-      }
-      newDifference.fixAction = success? FixAction.Fixed : FixAction.CannotFix;
-      props.setFileVsSlackDifferences(fileVsSlackDifferences);
-    
+    case FixAction.AddSlackManager:
+      await addSlackManager(difference, fileVsSlackDifferences, instance, silentRequest, props.setFileVsSlackDifferences);
       break;
-    }
+    case FixAction.AddProfileOnlySlackUser:
+      // Logic error
+      if(!props.slackAtlasUsers) {
+        throw new Error("slackAtlasUsers is not set");
+      }
+      await addProfileOnlySlackUser(difference, fileVsSlackDifferences, instance, silentRequest,
+        props.setFileVsSlackDifferences);
+      break;
     default:
       throw new Error("TODO");
       break;
@@ -286,6 +264,91 @@ function FileVsSlackDifferencesList(props: FileVsSlackDifferencesListProps) {
       </>
     );
   }
+}
+
+async function addSlackManager(difference: FileVsSlackDifference,
+  fileVsSlackDifferences: Map<string, FileVsSlackDifference>,
+  instance: IPublicClientApplication,
+  silentRequest: SilentRequest,
+  setFileVsSlackDifferences: React.Dispatch<React.SetStateAction<Map<string, FileVsSlackDifference> | undefined>>) {
+  let newDifference = fileVsSlackDifferences.get(difference.fileUser.email);
+  // Logic error
+  if(!newDifference) {
+    throw new Error("Cannot find difference in new Map");
+  }
+  newDifference.fixAction = FixAction.Fixing;
+  setFileVsSlackDifferences(fileVsSlackDifferences);
+
+  const authenticationResult = await instance.acquireTokenSilent(silentRequest);
+  // These are both logic errors.
+  if(!difference.slackUser) {
+    throw new Error("Missing Slack user");
+  }
+  if(!difference.slackManager) {
+    throw new Error("Missing Slack new manager");
+  }
+  
+  const success = await patchSlackAtlasData(authenticationResult.accessToken, difference.slackUser.id, difference.slackManager.id);
+
+  // TODO work out how to render each line separately and just trigger rerender of the specific line
+  fileVsSlackDifferences = new Map(fileVsSlackDifferences);
+  newDifference = fileVsSlackDifferences.get(difference.fileUser.email);
+  // Logic error
+  if(!newDifference) {
+    throw new Error("Cannot find difference in new Map");
+  }
+  newDifference.fixAction = success? FixAction.Fixed : FixAction.CannotFix;
+  setFileVsSlackDifferences(fileVsSlackDifferences);
+}
+
+async function addProfileOnlySlackUser(difference: FileVsSlackDifference,
+  fileVsSlackDifferences: Map<string, FileVsSlackDifference>,
+  instance: IPublicClientApplication,
+  silentRequest: SilentRequest,
+  setFileVsSlackDifferences: React.Dispatch<React.SetStateAction<Map<string, FileVsSlackDifference> | undefined>>) {
+  let newDifference = fileVsSlackDifferences.get(difference.fileUser.email);
+  // Logic error
+  if(!newDifference) {
+    throw new Error("Cannot find difference in new Map");
+  }
+  newDifference.fixAction = FixAction.Fixing;
+  setFileVsSlackDifferences(fileVsSlackDifferences);
+
+  const authenticationResult = await instance.acquireTokenSilent(silentRequest);
+
+  // Slack requires users to have unique usernames and email addresses.
+  // So edit the Slack email to be in form of bob+slackprofile@example.com
+  // Remove any +slackprofile bit first if it's there so we don't end up twice.
+  let profileEmail = difference.fileUser.email.replace('+slackprofile@', '@');
+  profileEmail = difference.fileUser.email.replace('@', '+slackprofile@');
+  // The username we append .profile-only.  We do this so that if we ever want to create
+  // a proper Slack user for this profile user, we won't get a username or email clash.
+  // Slack usernames must be 21 chars or under.
+  let profileUserName = `${difference.fileUser.firstName.substring(0,3)}.` +
+      `${difference.fileUser.lastName.substring(0,3)}.profile-only`;
+  profileUserName = profileUserName.toLowerCase();
+
+  const userType = "[[profile-only]]";
+
+  const id = await postSlackAtlasData(authenticationResult.accessToken,
+    difference.fileUser.firstName,
+    difference.fileUser.lastName,
+    profileUserName,
+    difference.fileUser.title,
+    profileEmail,
+    userType,
+    difference.slackManager?.id);
+
+  console.log(`New Slack user id = ${inspect(id)}`);
+  // TODO work out how to render each line separately and just trigger rerender of the specific line
+  fileVsSlackDifferences = new Map(fileVsSlackDifferences);
+  newDifference = fileVsSlackDifferences.get(difference.fileUser.email);
+  // Logic error
+  if(!newDifference) {
+    throw new Error("Cannot find difference in new Map");
+  }
+  newDifference.fixAction = id? FixAction.Fixed : FixAction.CannotFix;
+  setFileVsSlackDifferences(fileVsSlackDifferences);
 }
 
 export function FileSection(props: FileSectionProps) {

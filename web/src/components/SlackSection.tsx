@@ -18,6 +18,7 @@ export type SlackAtlasUser = {
   manager: SlackAtlasUser | undefined,
   active: boolean,
   userType: string | undefined
+  profileOnlyUser: boolean
 };
 
 type SlackSectionProps = {
@@ -59,10 +60,18 @@ export function SlackSection(props: SlackSectionProps) {
         console.log(`Ignoring ${slackAtlasUser.email} as bot user`);
         continue;
       }
-      // Convert email to lowercase as sometimes it's stored in CamelCase
+      // Convert email to lowercase as sometimes it's stored in CamelCase and we will use it a Map key
       slackAtlasUser.email = slackAtlasUser.email.toLowerCase();
-      // Also get rid of any +slackprofile part of the email address that was added.
-      slackAtlasUser.email = slackAtlasUser.email.replace('+slackprofile@', '@');
+      // We have stored Profile Only users with +slackprofile as part of their email address.
+      // Remove that so their email address matches what will be in the file, but mark them
+      // as profile-only so we can add the +slackprofile part back in if needed.
+      if(slackAtlasUser.email.match(/\+slackprofile@/)) {
+        slackAtlasUser.email = slackAtlasUser.email.replace('+slackprofile@', '@');
+        slackAtlasUser.profileOnlyUser = true;
+      }
+      else {
+        slackAtlasUser.profileOnlyUser = false;
+      }
       slackAtlasUserMap.set(slackAtlasUser.email, slackAtlasUser);
       id2slackAtlasUserMap.set(slackAtlasUser.id, slackAtlasUser);
     }

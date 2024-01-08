@@ -2,17 +2,21 @@ import 'source-map-support/register';
 import * as util from 'util';
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {getSecretValue} from './awsAPI';
+import {postUser} from './slackAPI';
+import axios from "axios";
 
 type PostSlackAtlasUser = {
   firstName: string,
   lastName: string,
+  userName: string,
   title: string,
   email: string,
+  userType: string,
   managerId: string | undefined | null
 };
 
 /**
- * Handle the request for POST to Slack Atlas
+ * Handle the request for POST to Slack Atlas.  Creates Profile Only users.
  * @param event the event from the API requesting the data
  * @returns HTTP 200 with body containing the body of the call to Slack Atlas SCIM API.
  */
@@ -30,54 +34,29 @@ export async function handlePostSlackAtlasData(event: APIGatewayProxyEvent): Pro
     if(!postSlackAtlasUser.lastName) {
       throw new Error("Missing lastName property");
     }
+    if(!postSlackAtlasUser.userName) {
+      throw new Error("Missing userName property");
+    }
     if(!postSlackAtlasUser.title) {
       throw new Error("Missing title property");
     }
     if(!postSlackAtlasUser.email) {
       throw new Error("Missing email property");
     }
+    if(!postSlackAtlasUser.userType) {
+      throw new Error("Missing userType property");
+    }
     if(!postSlackAtlasUser.managerId) {
       postSlackAtlasUser.managerId = null;
     }
 
-    // Slack requires users to have unique usernames and email addresses.
-    // So edit the Slack email to be in form of bob+slackprofile@example.com
-    // Remove any +slackprofile bit first if it's there so we don't end up twice.
-    let profileEmail = postSlackAtlasUser.email.replace('+slackprofile@', '@');
-    profileEmail = postSlackAtlasUser.email.replace('@', '+slackprofile@');
-    // The username we append .profile-only.  We do this so that if we ever want to create
-    // a proper Slack user for this profile user, we won't get a username or email clash.
-    // Slack usernames must be 21 chars or under.
-    let profileUserName = `${postSlackAtlasUser.firstName.substring(0,1)}.` +
-      `${postSlackAtlasUser.lastName.substring(0,6)}.profile-only`;
-    profileUserName = profileUserName.toLowerCase();
-    const postUsersRequest = {
-      schemas: [
-        "urn:ietf:params:scim:schemas:core:2.0:User",
-        "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
-      ],
-      userName: profileUserName,
-      name: {
-        familyName: postSlackAtlasUser.lastName,
-        givenName: postSlackAtlasUser.firstName,
-      },
-      displayName: `${postSlackAtlasUser.firstName} ${postSlackAtlasUser.lastName}`,
-      emails: [
-        {
-          value: profileEmail,
-          type: "work",
-          primary: true
-        }
-      ],
-      userType: "[[profile-only]]",
-      title: postSlackAtlasUser.title,
-      active: true,
-      "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
-        manager: {
-          managerId: postSlackAtlasUser.managerId
-        }
-      }
-    };
+    const id = await postUser(postSlackAtlasUser.firstName,
+      postSlackAtlasUser.lastName,
+      postSlackAtlasUser.userName,
+      postSlackAtlasUser.title,
+      postSlackAtlasUser.email,
+      postSlackAtlasUser.userType,
+      postSlackAtlasUser.managerId);
 
     const accessControlAllowOrigin = await getSecretValue('OrgChartSync', 'Access-Control-Allow-Origin');
     
@@ -86,7 +65,7 @@ export async function handlePostSlackAtlasData(event: APIGatewayProxyEvent): Pro
         "Access-Control-Allow-Origin" : accessControlAllowOrigin,
         "Access-Control-Allow-Credentials" : true
       },
-      body: JSON.stringify(postUsersRequest),
+      body: JSON.stringify({id}),
       statusCode: 200
     };
 
@@ -95,10 +74,37 @@ export async function handlePostSlackAtlasData(event: APIGatewayProxyEvent): Pro
     return result;
   }
   catch (error) {
-    console.error(error);
+    let errorMessage = "Unknown error";
+    
+    if(axios.isAxiosError(error)) {
+      if(error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error(error.response.data);
+        console.error(error.response.status);
+        console.error(error.response.headers);
+        errorMessage = "Failed to patch user - error from Slack";
+      } else if(error.request) {
+        // The request was made but no response was received
+        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+        // http.ClientRequest in node.js
+        console.error(error.request);
+        errorMessage = "Failed to patch user - no response from Slack";
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error', error.message);
+        errorMessage = "Failed to patch user - failed to send to Slack";
+      }
+      console.error(error.config);
+      errorMessage = "Failed to patch user - unknown error";
+    }
+    else {
+      console.error(error);
+      errorMessage = "Failed to patch user - unknown error";
+    }
 
     const json = {
-      error: JSON.stringify(util.inspect(error))
+      error: errorMessage
     };
 
     const result: APIGatewayProxyResult = {

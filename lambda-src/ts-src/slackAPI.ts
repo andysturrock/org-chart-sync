@@ -119,7 +119,7 @@ export async function getUsers() {
 }
 
 /**
- * 
+ * Update a Slack user's manager
  * @param id Slack id of the user being updated
  * @param managerId Slack id of the user's manager or null if removing the manaager
  * @returns The manager of the id that was set
@@ -151,4 +151,61 @@ export async function patchManager(id: string, managerId: string | null) {
   const slackResponse = await axios.patch<SlackResponse>(url, patchUsersRequest, config);
   console.log(`patchManager slackResponse.data: ${util.inspect(slackResponse.data, true, 99)}`);
   return slackResponse.data['urn:scim:schemas:extension:enterprise:1.0'].manager.managerId;
+}
+
+/**
+ * Create a Slack user
+ * @param id Slack id of the user being updated
+ * @param managerId Slack id of the user's manager or null if removing the manaager
+ * @returns The manager of the id that was set
+ */
+export async function postUser(firstName: string,
+  lastName: string,
+  userName: string,
+  title: string,
+  email: string,
+  userType: string,
+  managerId: string | null) {
+  const postUsersRequest = {
+    schemas: [
+      "urn:scim:schemas:core:1.0",
+      "urn:scim:schemas:extension:enterprise:1.0"
+    ],
+    userName,
+    name: {
+      familyName: lastName,
+      givenName: firstName,
+    },
+    displayName: `${firstName} ${lastName}`,
+    emails: [
+      {
+        value: email,
+        type: "work",
+        primary: true
+      }
+    ],
+    userType: userType,
+    title: title,
+    active: true,
+    "urn:scim:schemas:extension:enterprise:1.0": {
+      manager: {
+        managerId: managerId
+      }
+    }
+  };
+
+  const slackBotToken = await refreshToken();
+  const url = `https://api.slack.com/scim/v1/Users`;
+  const config: AxiosRequestConfig = {
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${slackBotToken}`
+    }
+  };
+  type SlackResponse = {
+    id: string
+  };
+  const {data} = await axios.post<SlackResponse>(url, postUsersRequest, config);
+  console.log(`postUser slackResponse.data: ${util.inspect(data, true, null)}`);
+  return data.id;
 }

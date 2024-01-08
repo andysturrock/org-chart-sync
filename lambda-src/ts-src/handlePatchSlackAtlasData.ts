@@ -59,24 +59,24 @@ export async function handlePatchSlackAtlasData(event: APIGatewayProxyEvent): Pr
         console.error(error.response.data);
         console.error(error.response.status);
         console.error(error.response.headers);
-        errorMessage = util.inspect(error.response, false, null);
+        errorMessage = "Failed to patch user - error from Slack";
       } else if(error.request) {
         // The request was made but no response was received
         // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
         // http.ClientRequest in node.js
         console.error(error.request);
-        errorMessage = util.inspect(error.request, false, null);
+        errorMessage = "Failed to patch user - no response from Slack";
       } else {
         // Something happened in setting up the request that triggered an Error
         console.error('Error', error.message);
-        errorMessage = util.inspect(error.message, false, null);
+        errorMessage = "Failed to patch user - failed to send to Slack";
       }
       console.error(error.config);
-      errorMessage = util.inspect(error.config, false, null);
+      errorMessage = "Failed to patch user - unknown error";
     }
     else {
       console.error(error);
-      errorMessage = util.inspect(error, false, null);
+      errorMessage = "Failed to patch user - unknown error";
     }
 
     const json = {
