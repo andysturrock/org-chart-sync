@@ -36,7 +36,6 @@ export async function refreshToken() {
     error?: string
   };
   const slackResponse = await axios.post<SlackResponse>(url, form, config);
-  console.log(`refreshToken slackResponse.data: ${util.inspect(slackResponse.data, true, 99)}`);
 
   await putSecretValue('OrgChartSync', 'slackRefreshToken', slackResponse.data.refresh_token);
 
@@ -111,8 +110,6 @@ export async function getUsers() {
       };
       users.push(user);
     }
-
-    console.log(`usersResponse.data: ${util.inspect(usersResponse.data, true, 99)}`);
   }
 
   return users;
@@ -149,7 +146,6 @@ export async function patchManager(id: string, managerId: string | null) {
   },
   };
   const slackResponse = await axios.patch<SlackResponse>(url, patchUsersRequest, config);
-  console.log(`patchManager slackResponse.data: ${util.inspect(slackResponse.data, true, 99)}`);
   return slackResponse.data['urn:scim:schemas:extension:enterprise:1.0'].manager.managerId;
 }
 
@@ -206,6 +202,5 @@ export async function postUser(firstName: string,
     id: string
   };
   const {data} = await axios.post<SlackResponse>(url, postUsersRequest, config);
-  console.log(`postUser slackResponse.data: ${util.inspect(data, true, null)}`);
   return data.id;
 }
