@@ -8,6 +8,7 @@ import {SlackAtlasDataDiv} from "./SlackAtlasDataDiv";
 import {Button} from "react-bootstrap";
 import {getSlackAtlasData} from "../slack";
 import {getDummySlackData} from "./getDummySlackData";
+import {AADUser} from "./AADSection";
 
 export type SlackAtlasUser = {
   id: string,
@@ -23,10 +24,10 @@ export type SlackAtlasUser = {
 
 type SlackSectionProps = {
   fileUsers: Map<string, FileUser> | undefined,
+  azureActiveDirectoryUsers: Map<string, AADUser> | undefined,
   slackAtlasUsers: Map<string, SlackAtlasUser> | undefined;
   setSlackAtlasUsers: (slackAtlasUsers: Map<string, SlackAtlasUser>) => void;
 };
-
 export function SlackSection(props: SlackSectionProps) {
   const {instance, accounts} = useMsal();
   const [buttonDisabled, setButtonDisabled] = useState(false);
@@ -36,13 +37,36 @@ export function SlackSection(props: SlackSectionProps) {
     account: accounts[0]
   };
 
-  async function onClick(): Promise<void> {
+  const buttonText = buttonDisabled? "Getting Slack Atlas data..." : "Get Slack Atlas data";
+  return (
+    <>
+      <hr />
+      <h5 className="card-title">Slack Atlas data</h5>
+      <br />
+      {
+        props.slackAtlasUsers ? (
+          <SlackAtlasDataDiv
+            slackAtlasUsers={props.slackAtlasUsers}
+            fileUsers={props.fileUsers}
+            azureActiveDirectoryUsers={props.azureActiveDirectoryUsers}
+          />
+        ) : (
+          // eslint-disable-next-line @typescript-eslint/no-misused-promises
+          <Button variant="secondary" onClick={onGetSlackAtlasDataButtonClick} disabled={buttonDisabled}>
+            {buttonText}
+          </Button>
+        )
+      }
+    </>
+  );
+
+  async function onGetSlackAtlasDataButtonClick(): Promise<void> {
     setButtonDisabled(true);
     // Silently acquires an access token which is then attached to a request for MS Graph data
     const authenticationResult = await instance.acquireTokenSilent(silentRequest);
     console.log(`authenticationResult.accessToken for slackAtlasData API: ${inspect(authenticationResult.accessToken, true, 99)}`);
     const slackAtlasUsers = await getSlackAtlasData(authenticationResult.accessToken);
-    //const slackAtlasUsers = getDummySlackData();
+    // const slackAtlasUsers = getDummySlackData();
 
     // Convert the array into a map keyed by email address.
     const slackAtlasUserMap = new Map<string, SlackAtlasUser>();
@@ -85,23 +109,4 @@ export function SlackSection(props: SlackSectionProps) {
     props.setSlackAtlasUsers(slackAtlasUserMap);
     setButtonDisabled(false);
   }
-  const buttonText = buttonDisabled? "Getting Slack Atlas data..." : "Get Slack Atlas data";
-  return (
-    <>
-      <hr />
-      <h5 className="card-title">Slack Atlas data</h5>
-      <br />
-      {props.slackAtlasUsers ? (
-        <SlackAtlasDataDiv slackAtlasUsers={props.slackAtlasUsers} />
-      )
-        :
-        (
-          // eslint-disable-next-line @typescript-eslint/no-misused-promises
-          <Button variant="secondary" onClick={onClick} disabled={buttonDisabled}>
-            {buttonText}
-          </Button>
-        )
-      }
-    </>
-  );
 }
