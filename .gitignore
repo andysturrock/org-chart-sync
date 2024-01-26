@@ -1,0 +1,7 @@
+**/node_modules/**
+npm-debug.log
+cloudfunction/dist
+**/.secrets
+**/dist
+**/.env.*
+**/.env

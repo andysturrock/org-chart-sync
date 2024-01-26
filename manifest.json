@@ -1,0 +1,30 @@
+{
+  "display_information": {
+      "name": "Org Chart Sync"
+  },
+  "features": {
+      "bot_user": {
+          "display_name": "Org Chart Sync",
+          "always_online": false
+      }
+  },
+  "oauth_config": {
+      "redirect_urls": [
+          "https://example.com/slackRedirect"
+      ],
+      "scopes": {
+          "user": [
+              "admin"
+          ],
+          "bot": [
+              "users.profile:read",
+              "users:read"
+          ]
+      }
+  },
+  "settings": {
+      "org_deploy_enabled": true,
+      "socket_mode_enabled": false,
+      "token_rotation_enabled": false
+  }
+}
