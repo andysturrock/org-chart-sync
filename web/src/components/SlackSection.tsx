@@ -64,7 +64,6 @@ export function SlackSection(props: SlackSectionProps) {
     setButtonDisabled(true);
     // Silently acquires an access token which is then attached to a request for MS Graph data
     const authenticationResult = await instance.acquireTokenSilent(silentRequest);
-    console.log(`authenticationResult.accessToken for slackAtlasData API: ${inspect(authenticationResult.accessToken, true, 99)}`);
     const slackAtlasUsers = await getSlackAtlasData(authenticationResult.accessToken);
     // const slackAtlasUsers = getDummySlackData();
 
@@ -76,12 +75,12 @@ export function SlackSection(props: SlackSectionProps) {
     for(const slackAtlasUser of slackAtlasUsers) {
       // Ignore non-active users
       if(!slackAtlasUser.active) {
-        console.log(`Ignoring ${slackAtlasUser.email} as inactive`);
+        console.debug(`Ignoring ${slackAtlasUser.email} as inactive`);
         continue;
       }
       // Ignore bot users.  They have an email address ending in @slack-bots.com
       if(slackAtlasUser.email.match(/@slack-bots.com$/)) {
-        console.log(`Ignoring ${slackAtlasUser.email} as bot user`);
+        console.debug(`Ignoring ${slackAtlasUser.email} as bot user`);
         continue;
       }
       // Convert email to lowercase as sometimes it's stored in CamelCase and we will use it a Map key

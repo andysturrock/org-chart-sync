@@ -64,12 +64,10 @@ export async function putSecretValue(secretName: string, secretKey: string, secr
   };
     
   const client = new SecretsManagerClient(configuration);
-  console.log(`putting: ${JSON.stringify(secrets)}`);
   const input: PutSecretValueRequest = {
     SecretId: secretName,
     SecretString: JSON.stringify(secrets)
   };
   const command = new PutSecretValueCommand(input);
-  const result = await client.send(command);
-  console.log(`result = ${util.inspect(result, false, 99)}`);
+  await client.send(command);
 }

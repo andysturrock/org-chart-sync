@@ -52,7 +52,6 @@ export async function handleSlackAuthRedirect(event: APIGatewayProxyEvent): Prom
       error?: string
     };
     const {data} = await axios.post<SlackResponse>(url, form, config);
-    console.log(`data: ${util.inspect(data, true, 99)}`);
     
     if(!data.ok) {
       throw new Error(`Failed to exchange token: ${data.error}`);

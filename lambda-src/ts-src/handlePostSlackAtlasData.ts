@@ -22,7 +22,6 @@ type PostSlackAtlasUser = {
  */
 export async function handlePostSlackAtlasData(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
-    console.log(`event: ${util.inspect(event, true, 99)}`);
     if(!event.body) {
       throw new Error("Missing event body");
     }
@@ -68,8 +67,6 @@ export async function handlePostSlackAtlasData(event: APIGatewayProxyEvent): Pro
       body: JSON.stringify({id}),
       statusCode: 200
     };
-
-    console.log(`Returning ${util.inspect(result, true, 99)}`);
 
     return result;
   }

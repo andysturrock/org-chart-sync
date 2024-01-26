@@ -26,7 +26,6 @@ export async function getAADHierarchy(accessToken: string) {
     const headers = new AxiosHeaders({
       'Authorization': `Bearer ${accessToken}`
     });
-    console.log(`Access token: ${accessToken}`);
 
     while(url != undefined) {
       const config: AxiosRequestConfig<ManagerDataResponse> = {};

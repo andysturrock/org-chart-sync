@@ -22,7 +22,7 @@ export function AADSignInOutButton(aadSignInOutButtonProps: AADSignInOutButtonPr
 
   const handleLogin = () => {
     instance.loginRedirect(graphAPIScopes).catch((e) => {
-      console.log(e);
+      console.error(e);
     });
   };
 

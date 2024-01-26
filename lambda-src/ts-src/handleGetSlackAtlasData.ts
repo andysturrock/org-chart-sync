@@ -6,13 +6,12 @@ import {getSecretValue} from './awsAPI';
 
 /**
  * Handle the request for Slack Atlas data
- * @param event the event from the API requesting the data
+ * @param _event the event from the API requesting the data
  * @returns HTTP 200 with body containing Atlas information.
  */
-export async function handleGetSlackAtlasData(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function handleGetSlackAtlasData(_event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
-    console.log(`event: ${util.inspect(event, true, 99)}`);
-
     const accessControlAllowOrigin = await getSecretValue('OrgChartSync', 'Access-Control-Allow-Origin');
     
     const users = await getUsers();
@@ -24,8 +23,6 @@ export async function handleGetSlackAtlasData(event: APIGatewayProxyEvent): Prom
       body: JSON.stringify(users),
       statusCode: 200
     };
-
-    console.log(`Returning ${util.inspect(result, true, 99)}`);
 
     return result;
   }

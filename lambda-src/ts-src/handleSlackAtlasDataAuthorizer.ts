@@ -1,5 +1,4 @@
 import 'source-map-support/register';
-import util from 'util';
 import {APIGatewayAuthorizerResult, APIGatewayRequestAuthorizerEvent} from 'aws-lambda';
 import {generatePolicy, validateToken} from './authorization';
 import {getSecretValue} from './awsAPI';
@@ -48,9 +47,6 @@ export async function handleSlackAtlasDataAuthorizer(event: APIGatewayRequestAut
         }
       }
       const policy = generatePolicy('user', effect, event.methodArn);
-
-      console.log(`Returning policy: ${util.inspect(policy, true, 99)}`);
-
       return policy;
     }
     else {
