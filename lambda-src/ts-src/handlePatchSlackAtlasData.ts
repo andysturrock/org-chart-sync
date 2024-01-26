@@ -13,7 +13,7 @@ type PatchSlackAtlasUser = {
 /**
  * Handle the request for POST to Slack Atlas
  * @param event the event from the API requesting the data
- * @returns HTTP 200 with body containing the returned data from Slack Atlas SCIM API.
+ * @returns HTTP 200 with body containing the new manager id
  */
 export async function handlePatchSlackAtlasData(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
@@ -41,7 +41,7 @@ export async function handlePatchSlackAtlasData(event: APIGatewayProxyEvent): Pr
         "Access-Control-Allow-Origin" : accessControlAllowOrigin,
         "Access-Control-Allow-Credentials" : true
       },
-      body: JSON.stringify(patchSlackAtlasUser),
+      body: JSON.stringify({managerId: returnedManagerId}),
       statusCode: 200
     };
 
