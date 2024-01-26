@@ -3,10 +3,11 @@ import {SlackAtlasUser} from "./SlackSection";
 import {FileUser} from "./FileSection";
 import {Button} from "react-bootstrap";
 import {inspect} from "util";
-import {SilentRequest} from "@azure/msal-browser";
-import {useMsal} from "@azure/msal-react";
-import {slackAtlasDataAPIScopes} from "../authConfig";
 import {AADUser} from "./AADSection";
+import {useMsal} from "@azure/msal-react";
+import {IPublicClientApplication, SilentRequest} from "@azure/msal-browser";
+import {slackAtlasDataAPIScopes} from "../authConfig";
+import {patchSlackAtlasData} from "../slack";
 
 enum FixAction {
   DeactivateSlackUser = "Deactivate user in Slack",
@@ -23,7 +24,8 @@ type SlackVsFileDifference = {
   slackManager: SlackAtlasUser | undefined,
   newSlackManager: SlackAtlasUser | undefined,
   fileManager: FileUser | undefined,
-  fixAction: FixAction | undefined
+  fixAction: FixAction | undefined,
+  fixNote?: string
 };
 type SlackVsFileDifferencesListProps = {
   slackAtlasUsers: Map<string, SlackAtlasUser> | undefined,
@@ -32,6 +34,11 @@ type SlackVsFileDifferencesListProps = {
   children?: React.ReactNode,
 };
 function SlackVsFileDifferencesList(props: SlackVsFileDifferencesListProps) {
+  const {instance, accounts} = useMsal();
+  const silentRequest: SilentRequest = {
+    scopes: slackAtlasDataAPIScopes.scopes,
+    account: accounts[0]
+  };
 
   if(props.slackAtlasUsers && props.slackVsFileDifferences) {
     if(props.slackVsFileDifferences.size === 0) {
@@ -68,9 +75,12 @@ function SlackVsFileDifferencesList(props: SlackVsFileDifferencesListProps) {
                 title="Select File"
                 disabled={disabled}
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                onClick={() => {onFixInSlackButtonClick(difference);}}>
+                onClick={async () => {await onFixInSlackButtonClick(difference);}}>
                 { difference.fixAction }
               </Button>
+            </td>
+            <td style={{textAlign: "left"}}>
+              { difference.fixNote }
             </td>
           </tr>
         );
@@ -86,6 +96,7 @@ function SlackVsFileDifferencesList(props: SlackVsFileDifferencesListProps) {
                 <th style={{textAlign: "left"}}>Manager in file</th>
                 <th style={{textAlign: "left"}}>Manager in Slack</th>
                 <th style={{textAlign: "left"}}>Fix action</th>
+                <th style={{textAlign: "left"}}>Notes</th>
               </tr>
             </thead>
             <tbody>
@@ -104,8 +115,17 @@ function SlackVsFileDifferencesList(props: SlackVsFileDifferencesListProps) {
     );
   }
 
-  function onFixInSlackButtonClick(slackVsFileDifference: SlackVsFileDifference) {
+  async function onFixInSlackButtonClick(slackVsFileDifference: SlackVsFileDifference) {
     console.log(`Fixing ${inspect(slackVsFileDifference)}`);
+    const fileVsSlackDifferences = new Map(props.slackVsFileDifferences);
+    switch(slackVsFileDifference.fixAction) {
+    case FixAction.UpdateSlackManager:
+      await updateSlackManager(slackVsFileDifference, fileVsSlackDifferences, instance, silentRequest, props.setSlackVsFileDifferences);
+      break;
+    default:
+      throw new Error("TODO");
+      break;
+    }
   }
 }
 
@@ -147,6 +167,7 @@ export function CompareWithFileButton(props: CompareWithFileButtonProps) {
       if(!fileUser) {
         console.log(`${email} is in Slack but not file`);
         slackVsFileDifference.fixAction = FixAction.DeactivateSlackUser;
+        slackVsFileDifference.fixNote = "User is in Slack but missing from file";
       }
       else {
         // Manager set in Slack but not in file
@@ -155,16 +176,28 @@ export function CompareWithFileButton(props: CompareWithFileButtonProps) {
         }
         // Manager set in Slack and file but different
         else if(slackAtlasUser.manager && fileUser.manager && fileUser.manager.email !== slackAtlasUser.manager.email) {
-          slackVsFileDifference.newSlackManager = props.slackAtlasUsers.get(email);
-          slackVsFileDifference.fixAction = (slackVsFileDifference.newSlackManager === undefined) ?
-            FixAction.UpdateSlackManager : FixAction.CannotFix;
+          console.log(`user ${slackAtlasUser.email}: fileUser.manager.email = ${fileUser.manager.email}, slackAtlasUser.manager.email = ${slackAtlasUser.manager.email}`);
+          slackVsFileDifference.fileManager = props.fileUsers.get(fileUser.manager.email);
+          slackVsFileDifference.newSlackManager = props.slackAtlasUsers.get(fileUser.manager.email);
+          if(slackVsFileDifference.newSlackManager) {
+            slackVsFileDifference.fixAction = FixAction.UpdateSlackManager;
+          }
+          else {
+            slackVsFileDifference.fixAction = FixAction.CannotFix;
+            slackVsFileDifference.fixNote = "Manager does not exist in Slack";
+          }
         }
         // Manager set in file but not in Slack
         else if(fileUser.manager && !slackAtlasUser.manager) {
-          slackVsFileDifference.fixAction = FixAction.AddSlackManager;
+          slackVsFileDifference.fileManager = props.fileUsers.get(fileUser.manager.email);
           slackVsFileDifference.newSlackManager = props.slackAtlasUsers.get(email);
-          slackVsFileDifference.fixAction = (slackVsFileDifference.newSlackManager === undefined) ?
-            FixAction.UpdateSlackManager : FixAction.CannotFix;
+          if(slackVsFileDifference.newSlackManager) {
+            slackVsFileDifference.fixAction = FixAction.AddSlackManager;
+          }
+          else {
+            slackVsFileDifference.fixAction = FixAction.CannotFix;
+            slackVsFileDifference.fixNote = "Manager does not exist in Slack";
+          }
         }
         // Manager set in neither file nor Slack
         else if(!fileUser.manager && !slackAtlasUser.manager) {
@@ -178,6 +211,7 @@ export function CompareWithFileButton(props: CompareWithFileButtonProps) {
         // Presumably a logic error
         else {
           slackVsFileDifference.fixAction = FixAction.CannotFix;
+          slackVsFileDifference.fixNote = "Contact Support";
         }
       }
     }
@@ -197,7 +231,7 @@ export function SlackAtlasDataDiv(props: SlackAtlasDataDivProps) {
     <>
       <div id="slack-atlas-data-div">
         <label>
-        Number of users: {props.slackAtlasUsers.size}
+        Number of Slack users: {props.slackAtlasUsers.size}
         </label>
       </div>
       {
@@ -230,3 +264,35 @@ export function SlackAtlasDataDiv(props: SlackAtlasDataDivProps) {
   );
 }
 
+async function updateSlackManager(difference: SlackVsFileDifference,
+  slackVsFileDifferences: Map<string, SlackVsFileDifference>,
+  instance: IPublicClientApplication,
+  silentRequest: SilentRequest,
+  setSlackVsFileDifferences: React.Dispatch<React.SetStateAction<Map<string, SlackVsFileDifference> | undefined>>) {
+  let newDifference = slackVsFileDifferences.get(difference.slackUser.email);
+  // Logic error
+  if(!newDifference) {
+    throw new Error("Cannot find difference in new Map");
+  }
+  newDifference.fixAction = FixAction.Fixing;
+  setSlackVsFileDifferences(slackVsFileDifferences);
+
+  const authenticationResult = await instance.acquireTokenSilent(silentRequest);
+  // These are both logic errors.
+  if(!difference.slackUser) {
+    throw new Error("Missing Slack user");
+  }
+  // If the manager is not set then explicitly pass null as the manager id.
+  const managerId = difference.slackManager ? difference.slackManager.id : null;
+  const success = await patchSlackAtlasData(authenticationResult.accessToken, difference.slackUser.id, managerId);
+
+  // TODO work out how to render each line separately and just trigger rerender of the specific line
+  slackVsFileDifferences = new Map(slackVsFileDifferences);
+  newDifference = slackVsFileDifferences.get(difference.slackUser.email);
+  // Logic error
+  if(!newDifference) {
+    throw new Error("Cannot find difference in new Map");
+  }
+  newDifference.fixAction = success? FixAction.Fixed : FixAction.CannotFix;
+  setSlackVsFileDifferences(slackVsFileDifferences);
+}
