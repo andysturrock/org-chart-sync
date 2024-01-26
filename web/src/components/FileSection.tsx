@@ -428,6 +428,15 @@ export function FileSection(props: FileSectionProps) {
     filereader.readAsText(event.target.files[0]);
   }
 
+  /**
+   * Read a CSV file and build a hierarchy.  The file should have the following columns:
+   * 
+   * id, firstName, lastName, jobTitle, email, managerId
+   * 
+   * The first line of the file is assumed to be headings
+   * @param fileContents 
+   * @returns a Map of email address to FileUser
+   */
   function buildFileHierarchy(fileContents: string) {
     const email2FileUser = new Map<string, FileUser>();
     const id2FileUser = new Map<string, FileUser>();
