@@ -1,6 +1,6 @@
 import {useMsal} from '@azure/msal-react';
 import {getAADHierarchy} from '../graph';
-import {graphAPIScopes} from '../authConfig';
+import {graphAPIScopes} from '../config';
 import {useState} from 'react';
 import {SilentRequest} from '@azure/msal-browser';
 import Button from 'react-bootstrap/Button';

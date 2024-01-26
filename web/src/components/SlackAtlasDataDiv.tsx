@@ -6,7 +6,7 @@ import {inspect} from "util";
 import {AADUser} from "./AADSection";
 import {useMsal} from "@azure/msal-react";
 import {IPublicClientApplication, SilentRequest} from "@azure/msal-browser";
-import {slackAtlasDataAPIScopes} from "../authConfig";
+import {slackAtlasDataAPIScopes} from "../config";
 import {patchSlackAtlasData} from "../slack";
 
 enum FixAction {

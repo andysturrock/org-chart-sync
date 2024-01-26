@@ -1,6 +1,6 @@
 import {useMsal} from "@azure/msal-react";
 import {Button} from "react-bootstrap";
-import {graphAPIScopes} from "../authConfig";
+import {graphAPIScopes} from "../config";
 
 type AADSignInOutButtonProps = {
   /**

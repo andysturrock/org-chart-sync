@@ -4,7 +4,7 @@ import {SlackAtlasUser} from "./SlackSection";
 import {inspect} from "util";
 import {useMsal} from "@azure/msal-react";
 import {IPublicClientApplication, SilentRequest} from "@azure/msal-browser";
-import {slackAtlasDataAPIScopes} from "../authConfig";
+import {slackAtlasDataAPIScopes} from "../config";
 import {patchSlackAtlasData, postSlackAtlasData} from "../slack";
 
 export type FileUser = {

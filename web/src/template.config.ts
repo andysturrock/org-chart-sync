@@ -1,6 +1,10 @@
 /*
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License.
+ */ 
+
+/*
+ * TODO Rename this file to config.ts and add your config below.
  */
 
 import {LogLevel} from "@azure/msal-browser";
@@ -13,11 +17,9 @@ import {LogLevel} from "@azure/msal-browser";
 
 export const msalConfig = {
   auth: {
-    clientId: "e4147363-04f1-48c7-bb73-3e9b8fe13267",
-    // Tenant ID
-    // TODO get from env
-    authority: "https://login.microsoftonline.com/5a504a6d-059c-433e-94aa-4967daaf5e9a",
-    redirectUri: "https://localhost:3000",
+    clientId: "alphanum", // from AAD app registration
+    authority: "https://login.microsoftonline.com/alphanum", // Tenant id from AAD
+    redirectUri: "https://example.com", // The URL of where the web is hosted
   },
   cache: {
     cacheLocation: "sessionStorage", // This configures where your cache will be stored
@@ -57,24 +59,13 @@ export const msalConfig = {
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-permissions-and-consent#openid-connect-scopes
  */
 export const graphAPIScopes = {
-  // TODO get from env
   scopes: ["User.Read", "User.ReadBasic.All", "Directory.Read.All"]
 };
 
 export const slackAtlasDataAPIScopes = {
-  // TODO get from env
-  scopes: ["api://6230a233-33d3-414b-ae9d-ae7995628e26/SlackAtlas.Write"]
+  scopes: ["api://alphanum/SlackAtlas.Write"] // from AAD app registration for the back-end APIs
 };
 
-/**
- * Add here the scopes to request when obtaining an access token for MS Graph API. For more information, see:
- * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-browser/docs/resources-and-scopes.md
- */
-export const graphConfig = {
-  graphMeEndpoint: "https://graph.microsoft.com/v1.0/me",
-};
-
-// TODO get from env or build script
 export const slackConfig = {
-  slackAtlasEndpoint: "https://orgchartsync.slackapps.atombank.co.uk/0_0_1/slack-atlas-data"
+  slackAtlasEndpoint: "https://orgchartsync.slackapps.example.com/0_0_1/slack-atlas-data"
 };

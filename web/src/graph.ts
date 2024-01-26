@@ -58,14 +58,3 @@ export async function getAADHierarchy(accessToken: string) {
   }
 }
 
-// TODO
-export function setUserType() {
-  // From https://learn.microsoft.com/en-us/graph/extensibility-open-users?tabs=http#code-try-10
-  // POST https://graph.microsoft.com/v1.0/me/extensions
-  const userTypeExtension = {
-    "@odata.type": "microsoft.graph.openTypeExtension",
-    "extensionName": "uk.co.atombank.atomextensions",
-    "isActive": true,
-    "userType": "employee"
-  };
-}

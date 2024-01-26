@@ -1,5 +1,5 @@
 import inspect from 'browser-util-inspect';
-import {slackConfig} from "./authConfig";
+import {slackConfig} from "./config";
 import axios, {AxiosHeaders, AxiosRequestConfig} from "axios";
 import {SlackAtlasUser} from './components/SlackSection';
 

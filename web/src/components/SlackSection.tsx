@@ -2,7 +2,7 @@ import {useState} from "react";
 import {FileUser} from "./FileSection";
 import {useMsal} from "@azure/msal-react";
 import {SilentRequest} from "@azure/msal-browser";
-import {slackAtlasDataAPIScopes} from "../authConfig";
+import {slackAtlasDataAPIScopes} from "../config";
 import inspect from "browser-util-inspect";
 import {SlackAtlasDataDiv} from "./SlackAtlasDataDiv";
 import {Button} from "react-bootstrap";
