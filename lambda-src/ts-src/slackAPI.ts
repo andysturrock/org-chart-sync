@@ -2,7 +2,7 @@ import {getSecretValue, putSecretValue} from "./awsAPI";
 import axios, {AxiosRequestConfig} from "axios";
 import querystring from 'querystring';
 import {SlackAtlasUser} from "./slackTypes";
-import util from "util";
+import util from 'util';
 
 /**
  * Refreshes the refresh token and returns an access token
@@ -147,6 +147,33 @@ export async function patchManager(id: string, managerId: string | null) {
   };
   const slackResponse = await axios.patch<SlackResponse>(url, patchUsersRequest, config);
   return slackResponse.data['urn:scim:schemas:extension:enterprise:1.0'].manager.managerId;
+}
+
+/**
+ * Update a Slack user's job title
+ * @param id Slack id of the user being updated
+ * @param title New job title or null if removing it
+ * @returns The new title that was set
+ */
+export async function patchTitle(id: string, title: string | null) {
+  const patchUsersRequest = {
+    title
+  };
+
+  const slackBotToken = await refreshToken();
+  const url = `https://api.slack.com/scim/v1/Users/${id}`;
+  const config: AxiosRequestConfig = {
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${slackBotToken}`
+    }
+  };
+  type SlackResponse = {
+    title:string
+  };
+  const slackResponse = await axios.patch<SlackResponse>(url, patchUsersRequest, config);
+  console.log(`slackResponse = ${util.inspect(slackResponse, false, null)}`);
+  return slackResponse.data.title;
 }
 
 /**

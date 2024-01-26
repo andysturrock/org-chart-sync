@@ -1,37 +1,63 @@
 import 'source-map-support/register';
-import * as util from 'util';
+import util from 'util';
 import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import {getSecretValue} from './awsAPI';
-import {patchManager} from './slackAPI';
+import {patchManager, patchTitle} from './slackAPI';
 import axios from "axios";
 
 type PatchSlackAtlasUser = {
+  patchType: "manager" | "title",
   id: string,
-  managerId: string | undefined | null
+  managerId: string | undefined | null,
+  title: string | undefined | null
 };
 
 /**
- * Handle the request for POST to Slack Atlas
+ * Handle the request for PATCH to Slack Atlas
  * @param event the event from the API requesting the data
  * @returns HTTP 200 with body containing the new manager id
  */
 export async function handlePatchSlackAtlasData(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   try {
-    console.log(`event: ${util.inspect(event, true, 99)}`);
     if(!event.body) {
       throw new Error("Missing event body");
     }
     const patchSlackAtlasUser: PatchSlackAtlasUser = JSON.parse(event.body) as PatchSlackAtlasUser;
+    if(!patchSlackAtlasUser.patchType) {
+      throw new Error("Missing patchType property");
+    }
     if(!patchSlackAtlasUser.id) {
       throw new Error("Missing id property");
     }
-    if(!patchSlackAtlasUser.managerId) {
-      patchSlackAtlasUser.managerId = null;
+
+    let body = {};
+    switch(patchSlackAtlasUser.patchType) {
+    case "manager": {
+      if(!patchSlackAtlasUser.managerId || patchSlackAtlasUser.managerId === "") {
+        patchSlackAtlasUser.managerId = null;
+      }
+     
+      const newManagerId = await patchManager(patchSlackAtlasUser.id, patchSlackAtlasUser.managerId);
+      if(newManagerId !== patchSlackAtlasUser.managerId) {
+        throw new Error(`Update to manager ${patchSlackAtlasUser.managerId} for user id ${patchSlackAtlasUser.id} failed.`);
+      }
+      body = {managerId: newManagerId};
+      break;
     }
- 
-    const returnedManagerId = await patchManager(patchSlackAtlasUser.id, patchSlackAtlasUser.managerId);
-    if(returnedManagerId !== patchSlackAtlasUser.managerId) {
-      throw new Error(`Update to manager ${patchSlackAtlasUser.managerId} for user id ${patchSlackAtlasUser.id} failed.`);
+    case "title": {
+      if(!patchSlackAtlasUser.title || patchSlackAtlasUser.title === "") {
+        patchSlackAtlasUser.title = null;
+      }
+     
+      const newTitle = await patchTitle(patchSlackAtlasUser.id, patchSlackAtlasUser.title);
+      if(newTitle !== patchSlackAtlasUser.title) {
+        throw new Error(`Update to title ${patchSlackAtlasUser.title} for user id ${patchSlackAtlasUser.id} failed.`);
+      }
+      body = {title: newTitle};
+      break;
+    }
+    default:
+      throw new Error(`Unknown patch type ${util.inspect(patchSlackAtlasUser.patchType)}`);
     }
 
     const accessControlAllowOrigin = await getSecretValue('OrgChartSync', 'Access-Control-Allow-Origin');
@@ -41,11 +67,9 @@ export async function handlePatchSlackAtlasData(event: APIGatewayProxyEvent): Pr
         "Access-Control-Allow-Origin" : accessControlAllowOrigin,
         "Access-Control-Allow-Credentials" : true
       },
-      body: JSON.stringify({managerId: returnedManagerId}),
+      body: JSON.stringify(body),
       statusCode: 200
     };
-
-    console.log(`Returning ${util.inspect(result, true, 99)}`);
 
     return result;
   }

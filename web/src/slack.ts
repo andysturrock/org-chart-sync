@@ -22,8 +22,9 @@ export async function getSlackAtlasData(accessToken: string) {
  * @param managerId id of manager.  Set to null to remove manager.
  * @returns true on success, otherwise false
  */
-export async function patchSlackAtlasData(accessToken: string, id: string, managerId: string | null) {
+export async function patchSlackAtlasManager(accessToken: string, id: string, managerId: string | null) {
   type PatchSlackAtlasUser = {
+    patchType: "manager",
     id: string,
     managerId: string | null
   };
@@ -32,6 +33,7 @@ export async function patchSlackAtlasData(accessToken: string, id: string, manag
     'Authorization': `Bearer ${accessToken}`
   });
   const patchSlackAtlasUser: PatchSlackAtlasUser = {
+    patchType: "manager",
     id,
     managerId
   };
@@ -41,6 +43,36 @@ export async function patchSlackAtlasData(accessToken: string, id: string, manag
   const {data} = await axios.patch<PatchSlackAtlasUser>(slackConfig.slackAtlasEndpoint, patchSlackAtlasUser, config);
 
   return (data.managerId === managerId);
+}
+
+/**
+ * Patches a new title in Slack for the given user
+ * @param accessToken AAD access token with appropriate scope
+ * @param id id of user to update
+ * @param managerId id of manager.  Set to null to remove manager.
+ * @returns true on success, otherwise false
+ */
+export async function patchSlackAtlasTitle(accessToken: string, id: string, title: string | null) {
+  type PatchSlackAtlasUser = {
+    patchType: "title",
+    id: string,
+    title: string | null
+  };
+
+  const headers = new AxiosHeaders({
+    'Authorization': `Bearer ${accessToken}`
+  });
+  const patchSlackAtlasUser: PatchSlackAtlasUser = {
+    patchType: "title",
+    id,
+    title
+  };
+
+  const config: AxiosRequestConfig<PatchSlackAtlasUser> = {};
+  config.headers = headers;
+  const {data} = await axios.patch<PatchSlackAtlasUser>(slackConfig.slackAtlasEndpoint, patchSlackAtlasUser, config);
+
+  return (data.title === title);
 }
 
 /**

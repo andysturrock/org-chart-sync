@@ -5,7 +5,7 @@ import {inspect} from "util";
 import {useMsal} from "@azure/msal-react";
 import {IPublicClientApplication, SilentRequest} from "@azure/msal-browser";
 import {slackAtlasDataAPIScopes} from "../config";
-import {patchSlackAtlasData, postSlackAtlasData} from "../slack";
+import {patchSlackAtlasManager, postSlackAtlasData} from "../slack";
 
 export type FileUser = {
   id: string,
@@ -288,7 +288,7 @@ async function addSlackManager(difference: FileVsSlackDifference,
     throw new Error("Missing Slack new manager");
   }
   
-  const success = await patchSlackAtlasData(authenticationResult.accessToken, difference.slackUser.id, difference.slackManager.id);
+  const success = await patchSlackAtlasManager(authenticationResult.accessToken, difference.slackUser.id, difference.slackManager.id);
 
   // TODO work out how to render each line separately and just trigger rerender of the specific line
   fileVsSlackDifferences = new Map(fileVsSlackDifferences);
@@ -339,7 +339,6 @@ async function addProfileOnlySlackUser(difference: FileVsSlackDifference,
     userType,
     difference.slackManager?.id);
 
-  console.log(`New Slack user id = ${inspect(id)}`);
   // TODO work out how to render each line separately and just trigger rerender of the specific line
   fileVsSlackDifferences = new Map(fileVsSlackDifferences);
   newDifference = fileVsSlackDifferences.get(difference.fileUser.email);
