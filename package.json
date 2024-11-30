@@ -1,0 +1,21 @@
+{
+  "name": "org-chart-sync",
+  "type": "module",
+  "workspaces": [
+    "packages/cdk",
+    "packages/lambda-src",
+    "packages/web"
+  ],
+  "devDependencies": {
+    "@eslint/js": "^9.6.0",
+    "@tsconfig/node20": "^20.1.4",
+    "@types/eslint__js": "^8.42.3",
+    "eslint": "^8.57.0",
+    "typescript": "^5.5.2",
+    "typescript-eslint": "^7.14.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "fix": "eslint . --fix"
+  }
+}

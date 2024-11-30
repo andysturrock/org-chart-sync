@@ -1,0 +1,124 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"cloudformation:ListStacks",
+				"cloudformation:DeleteChangeSet",
+				"cloudformation:DescribeStacks",
+				"cloudformation:GetTemplate",
+				"cloudformation:CreateChangeSet"
+			],
+			"Resource": [
+				"arn:aws:cloudformation:eu-west-2:<account>:stack/*/*"
+			]
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"ssm:GetParameters",
+				"ssm:GetParameter"
+			],
+			"Resource": [
+				"arn:aws:ssm:eu-west-2:<account>:parameter/cdk-bootstrap/*",
+				"arn:aws:cloudformation:eu-west-2:<account>:stack/*/*"
+			]
+		},
+		{
+			"Effect": "Allow",
+			"Action": "sts:AssumeRole",
+			"Resource": [
+				"arn:aws:iam::<account>:role/cdk-hnb659fds-deploy-role-<account>-eu-west-2",
+				"arn:aws:iam::<account>:role/cdk-hnb659fds-file-publishing-role-<account>-eu-west-2"
+			]
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"lambda:UpdateFunctionCode",
+				"lambda:RemovePermission",
+				"lambda:InvokeFunction",
+				"lambda:DeleteFunction",
+				"lambda:CreateFunction",
+				"lambda:GetFunction",
+				"lambda:AddPermission",
+        "lambda:UpdateFunctionConfiguration"
+			],
+			"Resource": "arn:aws:lambda:eu-west-2:<account>:function:OrgChartSync*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"s3:GetObject",
+				"s3:ListBucket"
+			],
+			"Resource": "arn:aws:s3:::cdk-hnb659fds-assets-<account>-eu-west-2/*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"events:DescribeRule",
+				"events:RemoveTargets",
+				"events:DeleteRule",
+				"events:PutRule",
+				"events:PutTargets"
+			],
+			"Resource": "arn:aws:events:eu-west-2:<account>:rule/OrgChartSyncLambdaStack*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"route53:GetHostedZone",
+				"route53:ChangeResourceRecordSets",
+				"route53:ListResourceRecordSets",
+				"route53:GetChange"
+			],
+			"Resource": [
+				"arn:aws:route53:::hostedzone/Z02400903USFGFM4DPA1N",
+				"arn:aws:route53:::change/*"
+			]
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"apigateway:DELETE",
+				"apigateway:POST",
+				"apigateway:GET",
+				"apigateway:PUT",
+				"apigateway:PATCH"
+			],
+			"Resource": [
+				"arn:aws:apigateway:eu-west-2::/domainnames/orgchartsync*",
+				"arn:aws:apigateway:eu-west-2::/domainnames",
+				"arn:aws:apigateway:eu-west-2::/restapis",
+				"arn:aws:apigateway:eu-west-2::/restapis/*",
+				"arn:aws:apigateway:eu-west-2::/account"
+			]
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"iam:DeleteRolePolicy",
+				"iam:DetachRolePolicy",
+				"iam:DeleteRole",
+				"iam:CreateRole",
+				"iam:AttachRolePolicy",
+				"iam:PutRolePolicy",
+				"iam:GetRole"
+			],
+			"Resource": [
+				"arn:aws:iam::<account>:role/OrgChartSyncLambdaStack*"
+			]
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"iam:PassRole"
+			],
+			"Resource": [
+				"arn:aws:iam::<account>:role/OrgChartSyncLambdaStack*"
+			]
+		}
+	]
+}
