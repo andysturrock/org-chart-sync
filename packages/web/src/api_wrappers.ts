@@ -1,7 +1,6 @@
-import inspect from 'browser-util-inspect';
-import { slackConfig } from "./config";
 import axios, { AxiosHeaders, AxiosRequestConfig } from "axios";
-import { SlackAtlasUser } from './components/SlackSection';
+import { slackConfig } from "./config";
+import { SlackAtlasUser } from './types/slack_atlas_user';
 
 export async function getSlackAtlasData(accessToken: string) {
   const headers = new AxiosHeaders({

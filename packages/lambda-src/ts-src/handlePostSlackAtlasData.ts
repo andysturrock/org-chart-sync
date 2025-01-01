@@ -1,9 +1,8 @@
-import 'source-map-support/register';
-import * as util from 'util';
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {getSecretValue} from './awsAPI';
-import {postUser} from './slackAPI';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import axios from "axios";
+import 'source-map-support/register';
+import { getSecretValue } from './awsAPI';
+import { postUser } from './slackAPI';
 
 type PostSlackAtlasUser = {
   firstName: string,

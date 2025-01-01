@@ -1,6 +1,5 @@
-import inspect from 'browser-util-inspect';
 import axios, { AxiosHeaders, AxiosRequestConfig } from "axios";
-import { AADUser } from './components/AADSection';
+import { AADUser } from './components/aad/AADSection';
 
 export async function getAADHierarchy(accessToken: string) {
   const azureActiveDirectoryUsers: AADUser[] = [];
@@ -17,7 +16,7 @@ export async function getAADHierarchy(accessToken: string) {
   };
   type ManagerDataResponse = {
     "@odata.context": string;
-    "@odata.nextLink": string;
+    "@odata.nextLink": string | undefined;
     "value": AADUserResponse[]
   };
   try {
@@ -27,12 +26,12 @@ export async function getAADHierarchy(accessToken: string) {
       'Authorization': `Bearer ${accessToken}`
     });
 
-    while(url != undefined) {
+    while(url !== "") {
       const config: AxiosRequestConfig<ManagerDataResponse> = {};
       config.headers = headers;
-      const response = await axios.get<ManagerDataResponse>(url, config);
-      url = response.data["@odata.nextLink"];
-      for(const value of response.data.value) {
+      const {data} = await axios.get<ManagerDataResponse>(url, config);
+      url = data["@odata.nextLink"] ?? "";
+      for(const value of data.value) {
         // Ignore entries with no mail set.
         if(!value.mail) {
           continue;

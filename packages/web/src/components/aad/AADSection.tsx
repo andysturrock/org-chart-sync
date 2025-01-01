@@ -3,8 +3,9 @@ import { useMsal } from '@azure/msal-react';
 import inspect from 'browser-util-inspect';
 import { useState } from 'react';
 import Button from 'react-bootstrap/Button';
-import { graphAPIScopes } from '../config';
-import { getAADHierarchy } from '../graph';
+import { graphAPIScopes } from '../../config';
+import { getAADHierarchy } from '../../graph';
+import { User, UserByEmail } from '../UserHierarchy';
 
 export type AADUser = {
   id: string,
@@ -17,13 +18,15 @@ export type AADUser = {
 };
 
 type AADSectionProps = {
-  azureActiveDirectoryUsers: Map<string, AADUser> | undefined,
-  setAzureActiveDirectoryUsers: (azureActiveDirectoryUsers: Map<string, AADUser>) => void,
+  azureActiveDirectoryUsers: Map<string, AADUser> | undefined;
+  setAzureActiveDirectoryUsers: (azureActiveDirectoryUsers: Map<string, AADUser>) => void;
+  setUserMap: (userByEmail: UserByEmail) => void;
   children?: React.ReactNode;
 };
 export function AADSection(props: AADSectionProps) {
   const { instance, accounts } = useMsal();
-  const [buttonDisabled, setButtonDisabled] = useState(false);
+  const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
+  const [userByEmail, setUserByEmail] = useState<UserByEmail>(new Map<string, User>());
 
   async function getAADOrgData() {
     setButtonDisabled(true);
@@ -34,9 +37,11 @@ export function AADSection(props: AADSectionProps) {
     // Silently acquires an access token which is then attached to a request for MS Graph data
     const authenticationResult = await instance.acquireTokenSilent(silentRequest);
     const azureActiveDirectoryUsers = await getAADHierarchy(authenticationResult.accessToken);
+
     const userMap = new Map<string, AADUser>();
     const id2User = new Map<string, AADUser>();
     for(const user of azureActiveDirectoryUsers) {
+      console.log(`Checking user: ${inspect(user)}`);
       // Ignore inactive users
       if(!user.accountEnabled) {
         continue;
@@ -51,23 +56,38 @@ export function AADSection(props: AADSectionProps) {
         user.manager = manager;
       }
     }
+    console.log(`userMap.size: ${inspect(userMap.size)}`);
+
+    const newUserByEmail: UserByEmail = new Map<string, User>();
+    for(const aadUser of userMap.values()) {
+      const user: User = {
+        email: aadUser.mail,
+        managerEmail: aadUser.manager? aadUser.manager.mail : null
+      };
+      newUserByEmail.set(aadUser.mail, user);
+    }
+    setUserByEmail(newUserByEmail);
     props.setAzureActiveDirectoryUsers(userMap);
+    props.setUserMap(newUserByEmail);
     setButtonDisabled(false);
   }
 
+  console.log(`userByEmail.size: ${userByEmail.size}`);
+  console.log(`userByEmail: ${JSON.stringify(userByEmail)}`);
+  console.log(userByEmail)
   return (
     <>
       <hr />
       <h5 className="card-title">AAD data</h5>
       <br />
-      {props.azureActiveDirectoryUsers ? (
+      {userByEmail.size > 0 ? (
         <label>
         AAD Org Data
           <textarea
             name="AAD Org Data"
             readOnly={true}
             rows={4} cols={40}
-            value={inspect(props.azureActiveDirectoryUsers, false, undefined, false)}/>
+            value={JSON.stringify(userByEmail)}/>
         </label>
       ) : (
         // eslint-disable-next-line @typescript-eslint/no-misused-promises

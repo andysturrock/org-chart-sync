@@ -1,10 +1,12 @@
-import { useState } from 'react';
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from '@azure/msal-react';
+import { useState } from 'react';
 import './App.css';
+import { AADSection, AADUser } from './components/aad/AADSection';
+import { FileSection, FileUser } from './components/file/FileSection';
 import { PageLayout } from './components/PageLayout';
-import { FileSection, FileUser } from './components/FileSection';
-import { SlackAtlasUser, SlackSection } from "./components/SlackSection";
-import { AADSection, AADUser } from './components/AADSection';
+import { SlackSection } from "./components/slack/SlackSection";
+import { UserByEmail } from './components/UserHierarchy';
+import { SlackAtlasUser } from './types/slack_atlas_user';
 
 /**
 * Renders information about the signed-in user or a button to retrieve data about the user
@@ -30,6 +32,9 @@ function MainContent() {
   const [slackAtlasUsers, setSlackAtlasUsers] = useState<Map<string, SlackAtlasUser>>();
   const [fileUsers, setFileUsers] = useState<Map<string, FileUser>>();
   const [azureActiveDirectoryUsers, setAzureActiveDirectoryUsers] = useState<Map<string, AADUser>>();
+  const [aadUserMap, setAADUserMap] = useState<UserByEmail>();
+  const [slackUserMap, setSlackUserMap] = useState<UserByEmail>();
+
   return (
     <div className="App">
       <AuthenticatedTemplate>
@@ -45,16 +50,22 @@ function MainContent() {
           fileUsers={fileUsers}
           setFileUsers={setFileUsers}
           slackAtlasUsers={slackAtlasUsers}
+          slackUserMap={slackUserMap}
+          aadUserMap={aadUserMap}
         />
         <AADSection
           azureActiveDirectoryUsers={azureActiveDirectoryUsers}
           setAzureActiveDirectoryUsers={setAzureActiveDirectoryUsers}
+          setUserMap={setAADUserMap}
         />
         <SlackSection
           slackAtlasUsers={slackAtlasUsers}
           setSlackAtlasUsers={setSlackAtlasUsers}
+          setSlackUserMap={setSlackUserMap}
           fileUsers={fileUsers}
           azureActiveDirectoryUsers={azureActiveDirectoryUsers}
+          aadUserMap={aadUserMap}
+          slackUserMap={slackUserMap}
         />
       </AuthenticatedTemplate>
 

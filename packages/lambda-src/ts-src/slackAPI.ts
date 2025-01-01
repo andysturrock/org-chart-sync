@@ -78,7 +78,7 @@ export async function getUsers() {
   let totalResults = 0;
   let startIndex = 1;
   let morePages = true;
-  const count = 10;
+  const count = 500;
   let url = `https://api.slack.com/scim/v1/Users?count=${count}&startIndex=${startIndex}`;
   const config: AxiosRequestConfig = {
     headers: { 

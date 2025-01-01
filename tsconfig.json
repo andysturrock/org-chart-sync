@@ -5,5 +5,6 @@
     "module": "Node16"
   },
   "include": ["packages/**/*", "eslint.config.js"],
-  "exclude": ["**/node_modules", "**/dist", "**/cdk.out", "web/build"]
+  "exclude": ["**/node_modules", "**/dist", "**/cdk.out", "web/build"],
+  "sourceMap": true
 }

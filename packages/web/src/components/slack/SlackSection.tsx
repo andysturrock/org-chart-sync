@@ -2,33 +2,26 @@ import { SilentRequest } from "@azure/msal-browser";
 import { useMsal } from "@azure/msal-react";
 import { useState } from "react";
 import { Button } from "react-bootstrap";
-import { slackAtlasDataAPIScopes } from "../config";
-import { getSlackAtlasData } from "../slack";
-import { AADUser } from "./AADSection";
-import { FileUser } from "./FileSection";
+import { getSlackAtlasData } from "../../api_wrappers";
+import { slackAtlasDataAPIScopes } from "../../config";
+import { SlackAtlasUser } from "../../types/slack_atlas_user";
+import { AADUser } from "../aad/AADSection";
+import { FileUser } from "../file/FileSection";
+import { User, UserByEmail } from '../UserHierarchy';
 import { SlackAtlasDataDiv } from "./SlackAtlasDataDiv";
-
-export type SlackAtlasUser = {
-  id: string,
-  userName: string,
-  email: string,
-  title: string,
-  managerId: string | undefined,
-  manager: SlackAtlasUser | undefined,
-  active: boolean,
-  userType: string | undefined
-  profileOnlyUser: boolean
-};
 
 type SlackSectionProps = {
   fileUsers: Map<string, FileUser> | undefined,
   azureActiveDirectoryUsers: Map<string, AADUser> | undefined,
   slackAtlasUsers: Map<string, SlackAtlasUser> | undefined;
   setSlackAtlasUsers: (slackAtlasUsers: Map<string, SlackAtlasUser>) => void;
+  setSlackUserMap: (userByEmail: UserByEmail) => void;
+  aadUserMap: UserByEmail | undefined;
+  slackUserMap: UserByEmail | undefined;
 };
 export function SlackSection(props: SlackSectionProps) {
   const { instance, accounts } = useMsal();
-  const [buttonDisabled, setButtonDisabled] = useState(false);
+  const [buttonDisabled, setButtonDisabled] = useState<boolean>(false);
 
   const silentRequest: SilentRequest = {
     scopes: slackAtlasDataAPIScopes.scopes,
@@ -47,6 +40,8 @@ export function SlackSection(props: SlackSectionProps) {
             slackAtlasUsers={props.slackAtlasUsers}
             fileUsers={props.fileUsers}
             azureActiveDirectoryUsers={props.azureActiveDirectoryUsers}
+            aadUserMap={props.aadUserMap}
+            slackUserMap={props.slackUserMap}
           />
         ) : (
           // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -103,7 +98,17 @@ export function SlackSection(props: SlackSectionProps) {
         slackAtlasUser.manager = manager;
       }
     }
+
+    const userByEmail: UserByEmail = new Map<string, User>();
+    for(const slackAtlasUser of slackAtlasUserMap.values()) {
+      const user: User = {
+        email: slackAtlasUser.email,
+        managerEmail: slackAtlasUser.manager? slackAtlasUser.manager.email : null
+      };
+      userByEmail.set(slackAtlasUser.email, user);
+    }
     props.setSlackAtlasUsers(slackAtlasUserMap);
+    props.setSlackUserMap(userByEmail);
     setButtonDisabled(false);
   }
 }

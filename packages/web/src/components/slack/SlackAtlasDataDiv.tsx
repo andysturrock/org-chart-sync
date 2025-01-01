@@ -1,13 +1,73 @@
 import { IPublicClientApplication, SilentRequest } from "@azure/msal-browser";
 import { useMsal } from "@azure/msal-react";
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
 import { Button } from "react-bootstrap";
 import { inspect } from "util";
-import { slackAtlasDataAPIScopes } from "../config";
-import { patchSlackAtlasManager, patchSlackAtlasTitle } from "../slack";
-import { AADUser } from "./AADSection";
-import { FileUser } from "./FileSection";
-import { SlackAtlasUser } from "./SlackSection";
+import { patchSlackAtlasManager, patchSlackAtlasTitle } from "../../api_wrappers";
+import { slackAtlasDataAPIScopes } from "../../config";
+import { SlackAtlasUser } from "../../types/slack_atlas_user";
+import { AADUser } from "../aad/AADSection";
+import { FileUser } from "../file/FileSection";
+import { compare, UserByEmail } from "../UserHierarchy";
+import { SlackVsAADDifferenceTable } from "./SlackVsAADDifferenceTable";
+
+type SlackAtlasDataDivProps = {
+  slackAtlasUsers: Map<string, SlackAtlasUser>;
+  fileUsers: Map<string, FileUser> | undefined;
+  azureActiveDirectoryUsers: Map<string, AADUser> | undefined;
+
+  aadUserMap: UserByEmail | undefined;
+  slackUserMap: UserByEmail | undefined;
+};
+export function SlackAtlasDataDiv(props: SlackAtlasDataDivProps) {
+  const [slackVsFileDifferences, setSlackVsFileDifferences] =
+    useState<Map<string, SlackVsFileDifference[]> | undefined>(undefined);
+
+  let slackVsAADComparison = (
+    <>
+    </>
+  );
+  // If we have AAD Users and Slack Users then create the table and show that.
+  if(props.aadUserMap && props.slackUserMap) {
+    const userDiffs = compare(props.slackUserMap, props.aadUserMap)
+    slackVsAADComparison = (
+      <>
+        <SlackVsAADDifferenceTable
+          userdiffs={userDiffs}
+        />
+      </>
+    )
+  }
+  return (
+    <>
+      <div id="slack-atlas-data-div">
+        <label>
+          Number of Slack users: {props.slackAtlasUsers.size}
+        </label>
+      </div>
+      {
+        props.fileUsers ?
+          <>
+            <CompareWithFileButton
+              slackAtlasUsers={props.slackAtlasUsers}
+              fileUsers={props.fileUsers}
+              setSlackVsFileDifferences={setSlackVsFileDifferences}>
+            </CompareWithFileButton>
+            <SlackVsFileDifferencesList
+              slackAtlasUsers={props.slackAtlasUsers}
+              slackVsFileDifferences={slackVsFileDifferences}
+              setSlackVsFileDifferences={setSlackVsFileDifferences}>
+            </SlackVsFileDifferencesList>
+          </>
+          :
+          <></>
+      }
+      {
+        slackVsAADComparison
+      }
+    </>
+  );
+}
 
 enum FixAction {
   DeactivateSlackUser = "Deactivate user in Slack",
@@ -63,7 +123,7 @@ function SlackVsFileDifferencesList(props: SlackVsFileDifferencesListProps) {
               title="Select File"
               disabled={disabled}
               // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              onClick={async () => {await onFixInSlackButtonClick(difference);}}
+              onClick={async () => {await onFixFileDifferenceInSlackButtonClick(difference);}}
             >
               {difference.fixAction}
             </Button>
@@ -144,7 +204,7 @@ function SlackVsFileDifferencesList(props: SlackVsFileDifferencesListProps) {
     );
   }
 
-  async function onFixInSlackButtonClick(slackVsFileDifference: SlackVsFileDifference) {
+  async function onFixFileDifferenceInSlackButtonClick(slackVsFileDifference: SlackVsFileDifference) {
     const fileVsSlackDifferences = new Map(props.slackVsFileDifferences);
     switch(slackVsFileDifference.fixAction) {
     case FixAction.UpdateSlackManager:
@@ -278,51 +338,6 @@ export function CompareWithFileButton(props: CompareWithFileButtonProps) {
     }
     props.setSlackVsFileDifferences(differences);
   }
-}
-
-type SlackAtlasDataDivProps = {
-  slackAtlasUsers: Map<string, SlackAtlasUser>,
-  fileUsers: Map<string, FileUser> | undefined,
-  azureActiveDirectoryUsers: Map<string, AADUser> | undefined
-};
-export function SlackAtlasDataDiv(props: SlackAtlasDataDivProps) {
-  const [slackVsFileDifferences, setSlackVsFileDifferences] =
-    useState<Map<string, SlackVsFileDifference[]> | undefined>(undefined);
-  return (
-    <>
-      <div id="slack-atlas-data-div">
-        <label>
-        Number of Slack users: {props.slackAtlasUsers.size}
-        </label>
-      </div>
-      {
-        props.fileUsers ?
-          <>
-            <CompareWithFileButton
-              slackAtlasUsers={props.slackAtlasUsers}
-              fileUsers={props.fileUsers}
-              setSlackVsFileDifferences={setSlackVsFileDifferences}>
-            </CompareWithFileButton>
-            <SlackVsFileDifferencesList
-              slackAtlasUsers={props.slackAtlasUsers}
-              slackVsFileDifferences={slackVsFileDifferences}
-              setSlackVsFileDifferences={setSlackVsFileDifferences}>
-            </SlackVsFileDifferencesList>
-          </>
-          :
-          <></>
-      }
-      {
-        props.azureActiveDirectoryUsers ?
-          <>
-            <button>Compare with AAD</button>
-          </>
-          :
-          <>
-          </>
-      }
-    </>
-  );
 }
 
 async function updateSlackAtlas(difference: SlackVsFileDifference,

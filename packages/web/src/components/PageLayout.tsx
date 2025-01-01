@@ -3,15 +3,16 @@
  * Licensed under the MIT License.
  */
 
-type PageLayoutProps = {
-  children: React.ReactNode;
-};
 
 import React from "react";
 import Navbar from "react-bootstrap/Navbar";
 
 import { useIsAuthenticated } from "@azure/msal-react";
 import { AADSignInOutButton } from "./AADSignInOutButton";
+
+type PageLayoutProps = {
+  children: React.ReactNode;
+};
 
 /**
  * Renders the navbar component with a sign in or sign out button depending on whether or not a user is authenticated
