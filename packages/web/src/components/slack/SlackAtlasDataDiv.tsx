@@ -34,6 +34,7 @@ export function SlackAtlasDataDiv(props: SlackAtlasDataDivProps) {
       <>
         <SlackVsAADDifferenceTable
           userdiffs={userDiffs}
+          slackAtlasUsers={props.slackAtlasUsers}
         />
       </>
     )
