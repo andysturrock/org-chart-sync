@@ -22,7 +22,6 @@ export async function getSlackAtlasData(accessToken: string) {
  * @returns true on success, otherwise false
  */
 export async function patchSlackAtlasManager(accessToken: string, id: string, managerId: string | null) {
-
   const patchedSlackAtlasUser: PatchedSlackAtlasUser = {
     patchType: "manager",
     id,
@@ -53,22 +52,44 @@ export async function patchSlackAtlasTitle(accessToken: string, id: string, titl
   return (data.title === title);
 }
 
+/**
+ * Deactivates the given user in Slack
+ * @param accessToken AAD access token with appropriate scope
+ * @param id id of user to deactivate
+ * @returns true on success (ie active state is now set to false), otherwise false
+ */
+export async function deactivateSlackAtlasUser(accessToken: string, id: string) {
+  const patchedSlackAtlasUser: PatchedSlackAtlasUser = {
+    patchType: "active",
+    id,
+    active: false
+  };
+
+  const data = await patchSlackAtlasUser(accessToken, id, patchedSlackAtlasUser);
+
+  return (data.active === false);
+}
+
+
 type PatchedSlackAtlasUser = {
-  patchType: "manager" | "title";
+  patchType: "manager" | "title" | "active";
   id: string;
   // Explicit null means remove title
   title?: string | null;
   // Explicit null means remove manager
   managerId?: string | null;
+  // Explicit false means deactivate
+  active?: boolean | null;
 };
 
-async function patchSlackAtlasUser(accessToken: string, id: string, patchSlackAtlasUser: PatchedSlackAtlasUser) {
+async function patchSlackAtlasUser(accessToken: string, id: string, patchedSlackAtlasUser: PatchedSlackAtlasUser) {
   const config: AxiosRequestConfig<PatchedSlackAtlasUser> = {};
   const headers = new AxiosHeaders({
     'Authorization': `Bearer ${accessToken}`
   });
   config.headers = headers;
-  const { data } = await axios.patch<PatchedSlackAtlasUser>(slackConfig.slackAtlasEndpoint, patchSlackAtlasUser, config);
+  console.log(`patchSlackAtlasUser: ${JSON.stringify(patchedSlackAtlasUser)}`)
+  const { data } = await axios.patch<PatchedSlackAtlasUser>(slackConfig.slackAtlasEndpoint, patchedSlackAtlasUser, config);
   return data;
 }
 
@@ -80,8 +101,8 @@ async function patchSlackAtlasUser(accessToken: string, id: string, patchSlackAt
  * @param userName Username of the new user.  Must be unique in Slack and less than 22 chars.
  * @param title Job title of new user
  * @param email Email of new user
- * @param userType User type.  Set to "[[profile-only]]" for profile-only users.
  * @param managerId Manager id in Slack of new user
+ * @param profileOnly Create a profile-only user
  * @returns id of new user
  */
 export async function postSlackAtlasData(accessToken: string,
@@ -90,8 +111,8 @@ export async function postSlackAtlasData(accessToken: string,
   userName: string,
   title: string,
   email: string,
-  userType: string,
-  managerId: string | undefined | null) {
+  managerId: string | undefined | null,
+  profileOnly: boolean) {
   type PostSlackAtlasUser = {
     firstName: string,
     lastName: string,
@@ -108,6 +129,8 @@ export async function postSlackAtlasData(accessToken: string,
   const headers = new AxiosHeaders({
     'Authorization': `Bearer ${accessToken}`
   });
+
+  const userType = profileOnly ? "[[profile-only]]" : "";
   const postSlackAtlasUser: PostSlackAtlasUser = {
     firstName,
     lastName,

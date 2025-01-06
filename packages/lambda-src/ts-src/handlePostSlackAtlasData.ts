@@ -10,7 +10,7 @@ type PostSlackAtlasUser = {
   userName: string,
   title: string,
   email: string,
-  userType: string,
+  userType: string | null,
   managerId: string | undefined | null
 };
 
@@ -42,7 +42,7 @@ export async function handlePostSlackAtlasData(event: APIGatewayProxyEvent): Pro
       throw new Error("Missing email property");
     }
     if(!postSlackAtlasUser.userType) {
-      throw new Error("Missing userType property");
+      postSlackAtlasUser.userType = null;
     }
     if(!postSlackAtlasUser.managerId) {
       postSlackAtlasUser.managerId = null;

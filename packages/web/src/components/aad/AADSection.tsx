@@ -8,12 +8,14 @@ import { getAADHierarchy } from '../../graph';
 import { User, UserByEmail } from '../UserHierarchy';
 
 export type AADUser = {
-  id: string,
+  id: string;
+  givenName: string;
+  surname: string;
   displayName: string;
   jobTitle: string;
   mail: string;
   accountEnabled: boolean;
-  managerId: string | undefined,
+  managerId: string | undefined;
   manager: AADUser | undefined;
 };
 

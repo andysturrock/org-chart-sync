@@ -28,13 +28,14 @@ export function SlackAtlasDataDiv(props: SlackAtlasDataDivProps) {
     </>
   );
   // If we have AAD Users and Slack Users then create the table and show that.
-  if(props.aadUserMap && props.slackUserMap) {
+  if(props.aadUserMap && props.azureActiveDirectoryUsers && props.slackUserMap) {
     const userDiffs = compare(props.slackUserMap, props.aadUserMap)
     slackVsAADComparison = (
       <>
         <SlackVsAADDifferenceTable
           userdiffs={userDiffs}
           slackAtlasUsers={props.slackAtlasUsers}
+          azureActiveDirectoryUsers={props.azureActiveDirectoryUsers}
         />
       </>
     )

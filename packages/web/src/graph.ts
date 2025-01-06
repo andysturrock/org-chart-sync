@@ -10,6 +10,8 @@ export async function getAADHierarchy(accessToken: string) {
     employeeType: string | null,
     mail: string,
     jobTitle: string,
+    givenName: string,
+    surname: string,
     manager?: {
       id: string
     }
@@ -20,7 +22,7 @@ export async function getAADHierarchy(accessToken: string) {
     "value": AADUserResponse[]
   };
   try {
-    let url = "https://graph.microsoft.com/v1.0/users?$expand=manager($levels=1;$select=id)&$select=id,accountEnabled,displayName,employeeType,mail,jobTitle";
+    let url = "https://graph.microsoft.com/v1.0/users?$expand=manager($levels=1;$select=id)&$select=id,accountEnabled,displayName,employeeType,mail,jobTitle,givenName,surname";
 
     const headers = new AxiosHeaders({
       'Authorization': `Bearer ${accessToken}`

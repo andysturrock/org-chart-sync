@@ -329,16 +329,14 @@ async function addProfileOnlySlackUser(difference: FileVsSlackDifference,
       `${difference.fileUser.lastName.substring(0,3)}.profile-only`;
   profileUserName = profileUserName.toLowerCase();
 
-  const userType = "[[profile-only]]";
-
   const id = await postSlackAtlasData(authenticationResult.accessToken,
     difference.fileUser.firstName,
     difference.fileUser.lastName,
     profileUserName,
     difference.fileUser.title,
     profileEmail,
-    userType,
-    difference.slackManager?.id);
+    difference.slackManager?.id,
+    true);
 
   // TODO work out how to render each line separately and just trigger rerender of the specific line
   fileVsSlackDifferences = new Map(fileVsSlackDifferences);
