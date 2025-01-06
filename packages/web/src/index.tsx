@@ -10,17 +10,13 @@ import { msalConfig } from './config';
 // Bootstrap components
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-const msalInstance = new PublicClientApplication(msalConfig);
-
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
-/**
- * We recommend wrapping most or all of your components in the MsalProvider component. It's best to render the MsalProvider as close to the root as possible.
- */
+
 root.render(
   <React.StrictMode>
-    <MsalProvider instance={msalInstance}>
+    <MsalProvider instance={new PublicClientApplication(msalConfig)}>
       <App />
     </MsalProvider>
   </React.StrictMode>

@@ -17,7 +17,7 @@ export class LambdaStack extends Stack {
     // Semantic versioning has dots as separators but this is invalid in a URL
     // so replace the dots with underscores first.
     const lambdaVersionIdForURL = props.lambdaVersion.replace(/\./g, '_');
-    const accessControlAllowOrigin = '*'; // `https://${props.orgChartSyncDomainName}`;
+    const accessControlAllowOrigin = 'https://localhost:3000'; // `https://${props.orgChartSyncDomainName}`;
 
     // Common props for all lambdas, so define them once here.
     const allLambdaProps = {
@@ -64,7 +64,7 @@ export class LambdaStack extends Stack {
       functionName: 'OrgChartSync-handleGetSlackAtlasData',
       code: lambda.Code.fromAsset("../lambda-src/dist/handleGetSlackAtlasData"),
       ...allLambdaProps,
-      timeout: Duration.seconds(60)
+      timeout: Duration.seconds(30)
     });
     // Allow read/write access to the secret it needs
     props.orgChartSyncSecret.grantRead(handleGetSlackAtlasDataLambda);
@@ -214,6 +214,6 @@ export class LambdaStack extends Stack {
       target: route53.RecordTarget.fromAlias(new targets.ApiGatewayDomain(customDomain))
     });
     // And path mapping to the API
-    customDomain.addBasePathMapping(api, { basePath: `${lambdaVersionIdForURL}`, stage: stage });
+    customDomain.addBasePathMapping(api, { basePath: lambdaVersionIdForURL, stage: stage });
   }
 }

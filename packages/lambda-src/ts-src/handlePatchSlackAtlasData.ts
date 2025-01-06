@@ -1,15 +1,16 @@
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import axios from "axios";
 import 'source-map-support/register';
 import util from 'util';
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {getSecretValue} from './awsAPI';
-import {patchManager, patchTitle} from './slackAPI';
-import axios from "axios";
+import { getSecretValue } from './awsAPI';
+import { patchManager, patchTitle, patchUserActivationState as setUserActivationState } from './slackAPI';
 
 type PatchSlackAtlasUser = {
-  patchType: "manager" | "title",
-  id: string,
-  managerId: string | undefined | null,
-  title: string | undefined | null
+  patchType: "manager" | "title" | "active",
+  id: string;
+  managerId: string | undefined | null;
+  title: string | undefined | null;
+  active?: boolean | null;
 };
 
 /**
@@ -54,6 +55,16 @@ export async function handlePatchSlackAtlasData(event: APIGatewayProxyEvent): Pr
         throw new Error(`Update to title ${patchSlackAtlasUser.title} for user id ${patchSlackAtlasUser.id} failed.`);
       }
       body = {title: newTitle};
+      break;
+    }
+    case "active": {
+      // Set to explicitly false for any "falsey" (eg null, undefined) value
+      patchSlackAtlasUser.active = patchSlackAtlasUser.active ?? false;
+      const newActive = await setUserActivationState(patchSlackAtlasUser.id, patchSlackAtlasUser.active);
+      if(newActive !== patchSlackAtlasUser.active) {
+        throw new Error(`Update of active field to ${patchSlackAtlasUser.active} for user id ${patchSlackAtlasUser.id} failed.`);
+      }
+      body = {active: newActive};
       break;
     }
     default:

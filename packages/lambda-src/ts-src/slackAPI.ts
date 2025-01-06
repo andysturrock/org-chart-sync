@@ -1,6 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
 import querystring from 'querystring';
-import util from 'util';
 import { getSecretValue, putSecretValue } from "./awsAPI";
 import { SlackAtlasUser } from "./slackTypes";
 
@@ -78,7 +77,7 @@ export async function getUsers() {
   let totalResults = 0;
   let startIndex = 1;
   let morePages = true;
-  const count = 10;
+  const count = 500;
   let url = `https://api.slack.com/scim/v1/Users?count=${count}&startIndex=${startIndex}`;
   const config: AxiosRequestConfig = {
     headers: { 
@@ -113,6 +112,49 @@ export async function getUsers() {
   }
 
   return users;
+}
+
+/**
+ * Update a Slack user's activation state
+ * @param id Slack id of the user being activated or deactivated
+ * @returns The new activation state of the user (ie will return false if the user is deactivated)
+ */
+export async function patchUserActivationState(id: string, active: boolean) {
+  const slackBotToken = await refreshToken();
+  
+  const config: AxiosRequestConfig = {
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${slackBotToken}`
+    }
+  };
+
+  // Slack is a bit strange how it activates and deactivates people.  You can't just PATCH the state.
+  if(active) {
+    // You use the https://slack.com/api/admin.users.assign API to reactivate them.
+    // This adds them back into one of the workspaces in the grid and sets their "active" field to true.
+    // They don't get added back to all the other workspaces automatically.
+    // They also don't get added back to all their channels.
+    const defaultTeam = await getSecretValue('OrgChartSync', 'defaultTeam');
+    const postBody = {
+      user_id: id,
+      team_id: defaultTeam
+    };
+
+    type SlackResponse = {
+      ok: boolean
+    };
+    const url = `https://slack.com/api/admin.users.assign`;
+    const slackResponse = await axios.post<SlackResponse>(url, postBody, config);
+    return slackResponse.data.ok;
+  }
+  else {
+    // You have to use the DELETE verb in the SCIM API to deactivate people.
+    // This sets their "active" field to false and presumably does something else in the background too.
+    const url = `https://api.slack.com/scim/v1/Users/${id}`;
+    await axios.delete(url, config);
+    return false;
+  }
 }
 
 /**
@@ -172,7 +214,6 @@ export async function patchTitle(id: string, title: string | null) {
     title:string
   };
   const slackResponse = await axios.patch<SlackResponse>(url, patchUsersRequest, config);
-  console.log(`slackResponse = ${util.inspect(slackResponse, false, null)}`);
   return slackResponse.data.title;
 }
 
@@ -187,7 +228,7 @@ export async function postUser(firstName: string,
   userName: string,
   title: string,
   email: string,
-  userType: string,
+  userType: string | null,
   managerId: string | null) {
   const postUsersRequest = {
     schemas: [

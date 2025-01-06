@@ -1,8 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import 'source-map-support/register';
 import util from 'util';
-import { getSecretValue } from './awsAPI';
-import { getUsers } from './slackAPI';
+import { getSecretValue } from "./awsAPI";
+import { getUsers } from "./slackAPI";
 
 
 /**
@@ -16,6 +16,7 @@ export async function handleGetSlackAtlasData(_event: APIGatewayProxyEvent): Pro
     const accessControlAllowOrigin = await getSecretValue('OrgChartSync', 'Access-Control-Allow-Origin');
     
     const users = await getUsers();
+
     const result: APIGatewayProxyResult = {
       headers: {
         "Access-Control-Allow-Origin" : accessControlAllowOrigin,

@@ -1,9 +1,8 @@
-import 'source-map-support/register';
-import * as util from 'util';
-import {APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
-import {getSecretValue} from './awsAPI';
-import {postUser} from './slackAPI';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import axios from "axios";
+import 'source-map-support/register';
+import { getSecretValue } from './awsAPI';
+import { postUser } from './slackAPI';
 
 type PostSlackAtlasUser = {
   firstName: string,
@@ -11,7 +10,7 @@ type PostSlackAtlasUser = {
   userName: string,
   title: string,
   email: string,
-  userType: string,
+  userType: string | null,
   managerId: string | undefined | null
 };
 
@@ -43,7 +42,7 @@ export async function handlePostSlackAtlasData(event: APIGatewayProxyEvent): Pro
       throw new Error("Missing email property");
     }
     if(!postSlackAtlasUser.userType) {
-      throw new Error("Missing userType property");
+      postSlackAtlasUser.userType = null;
     }
     if(!postSlackAtlasUser.managerId) {
       postSlackAtlasUser.managerId = null;

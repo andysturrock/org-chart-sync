@@ -1,10 +1,11 @@
 import { IPublicClientApplication, SilentRequest } from "@azure/msal-browser";
 import { useMsal } from "@azure/msal-react";
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, JSX, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
-import { slackAtlasDataAPIScopes } from "../config";
-import { patchSlackAtlasManager, postSlackAtlasData } from "../slack";
-import { SlackAtlasUser } from "./SlackSection";
+import { patchSlackAtlasManager, postSlackAtlasData } from "../../api_wrappers";
+import { slackAtlasDataAPIScopes } from "../../config";
+import { SlackAtlasUser } from "../../types/slack_atlas_user";
+import { UserByEmail } from '../UserHierarchy';
 
 export type FileUser = {
   id: string,
@@ -38,19 +39,21 @@ type FileSectionProps = {
   slackAtlasUsers: Map<string, SlackAtlasUser> | undefined,
   fileUsers: Map<string, FileUser> | undefined,
   setFileUsers: (fileUsers: Map<string, FileUser>) => void
+  slackUserMap: UserByEmail | undefined;
+  aadUserMap: UserByEmail | undefined;
 };
 
 type FileDataProps = {
-  selectedFile: File | null,
+  selectedFileList: FileList | null,
   children?: React.ReactNode;
 };
 function FileData(props: FileDataProps) {
-  if(props.selectedFile) {
+  if(props.selectedFileList && props.selectedFileList[0]) {
     return (
       <div>
         <p>
           File Name:{" "}
-          {props.selectedFile.name}
+          {props.selectedFileList[0].name}
         </p>
       </div>
     );
@@ -66,12 +69,12 @@ function FileData(props: FileDataProps) {
 type CompareWithSlackButtonProps = {
   fileUsers: Map<string, FileUser> | undefined,
   slackAtlasUsers: Map<string, SlackAtlasUser> | undefined,
-  selectedFile: File | null,
+  selectedFileList: FileList | null,
   children?: React.ReactNode;
   setFileVsSlackDifferences: React.Dispatch<React.SetStateAction<Map<string, FileVsSlackDifference> | undefined>>
 };
 function CompareWithSlackButton(props: CompareWithSlackButtonProps) {
-  if(props.slackAtlasUsers && props.selectedFile) {
+  if(props.slackAtlasUsers && props.selectedFileList && props.selectedFileList[0]) {
     return (
       <>
         <Button
@@ -157,7 +160,7 @@ function CompareWithSlackButton(props: CompareWithSlackButtonProps) {
 
 type FileVsSlackDifferencesListProps = {
   slackAtlasUsers: Map<string, SlackAtlasUser> | undefined,
-  selectedFile: File | null,
+  selectedFileList: FileList | null,
   fileVsSlackDifferences: Map<string, FileVsSlackDifference> | undefined,
   children?: React.ReactNode,
   setFileVsSlackDifferences: React.Dispatch<React.SetStateAction<Map<string, FileVsSlackDifference> | undefined>>
@@ -187,11 +190,10 @@ function FileVsSlackDifferencesList(props: FileVsSlackDifferencesListProps) {
       break;
     default:
       throw new Error("TODO");
-      break;
     }
   }
 
-  if(props.slackAtlasUsers && props.selectedFile && props.fileVsSlackDifferences) {
+  if(props.slackAtlasUsers && props.selectedFileList && props.fileVsSlackDifferences) {
     if(props.fileVsSlackDifferences.size === 0) {
       return (
         <>
@@ -327,16 +329,14 @@ async function addProfileOnlySlackUser(difference: FileVsSlackDifference,
       `${difference.fileUser.lastName.substring(0,3)}.profile-only`;
   profileUserName = profileUserName.toLowerCase();
 
-  const userType = "[[profile-only]]";
-
   const id = await postSlackAtlasData(authenticationResult.accessToken,
     difference.fileUser.firstName,
     difference.fileUser.lastName,
     profileUserName,
     difference.fileUser.title,
     profileEmail,
-    userType,
-    difference.slackManager?.id);
+    difference.slackManager?.id,
+    true);
 
   // TODO work out how to render each line separately and just trigger rerender of the specific line
   fileVsSlackDifferences = new Map(fileVsSlackDifferences);
@@ -350,7 +350,8 @@ async function addProfileOnlySlackUser(difference: FileVsSlackDifference,
 }
 
 export function FileSection(props: FileSectionProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const [selectedFileList, setSelectedFileList] = useState<FileList | null>(null);
   const [fileVsSlackDifferences, setFileVsSlackDifferences] =
     useState<Map<string, FileVsSlackDifference> | undefined>(undefined);
   const hiddenFileInput = useRef<HTMLInputElement>(null);
@@ -377,14 +378,14 @@ export function FileSection(props: FileSectionProps) {
         </Button>
       </div>
       <div>
-        <FileData selectedFile={selectedFile}>
+        <FileData selectedFileList={selectedFileList}>
         </FileData>
       </div>
       <div>
         <CompareWithSlackButton
           fileUsers={props.fileUsers}
           slackAtlasUsers={props.slackAtlasUsers}
-          selectedFile={selectedFile}
+          selectedFileList={selectedFileList}
           setFileVsSlackDifferences={setFileVsSlackDifferences}
         >
         </CompareWithSlackButton>
@@ -392,7 +393,7 @@ export function FileSection(props: FileSectionProps) {
       <div>
         <FileVsSlackDifferencesList
           slackAtlasUsers={props.slackAtlasUsers}
-          selectedFile={selectedFile}
+          selectedFileList={selectedFileList}
           fileVsSlackDifferences={fileVsSlackDifferences}
           setFileVsSlackDifferences={setFileVsSlackDifferences}
         >
@@ -412,7 +413,7 @@ export function FileSection(props: FileSectionProps) {
       return;
     }
 
-    setSelectedFile(event.target.files[0]);
+    setSelectedFileList(event.target.files);
     const filereader = new FileReader();
     let fileContents = "";
     const onLoad = () => {

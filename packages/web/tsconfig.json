@@ -4,6 +4,7 @@
     "typeRoots": ["./node_modules/@types"],
     "outDir": "dist",
     "jsx": "react-jsx",
+    "sourceMap": true,
     "lib": [
       "DOM"
     ]

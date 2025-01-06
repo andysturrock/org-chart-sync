@@ -1,6 +1,5 @@
-import inspect from 'browser-util-inspect';
 import axios, { AxiosHeaders, AxiosRequestConfig } from "axios";
-import { AADUser } from './components/AADSection';
+import { AADUser } from './components/aad/AADSection';
 
 export async function getAADHierarchy(accessToken: string) {
   const azureActiveDirectoryUsers: AADUser[] = [];
@@ -11,28 +10,30 @@ export async function getAADHierarchy(accessToken: string) {
     employeeType: string | null,
     mail: string,
     jobTitle: string,
+    givenName: string,
+    surname: string,
     manager?: {
       id: string
     }
   };
   type ManagerDataResponse = {
     "@odata.context": string;
-    "@odata.nextLink": string;
+    "@odata.nextLink": string | undefined;
     "value": AADUserResponse[]
   };
   try {
-    let url = "https://graph.microsoft.com/v1.0/users?$expand=manager($levels=1;$select=id)&$select=id,accountEnabled,displayName,employeeType,mail,jobTitle";
+    let url = "https://graph.microsoft.com/v1.0/users?$expand=manager($levels=1;$select=id)&$select=id,accountEnabled,displayName,employeeType,mail,jobTitle,givenName,surname";
 
     const headers = new AxiosHeaders({
       'Authorization': `Bearer ${accessToken}`
     });
 
-    while(url != undefined) {
+    while(url !== "") {
       const config: AxiosRequestConfig<ManagerDataResponse> = {};
       config.headers = headers;
-      const response = await axios.get<ManagerDataResponse>(url, config);
-      url = response.data["@odata.nextLink"];
-      for(const value of response.data.value) {
+      const {data} = await axios.get<ManagerDataResponse>(url, config);
+      url = data["@odata.nextLink"] ?? "";
+      for(const value of data.value) {
         // Ignore entries with no mail set.
         if(!value.mail) {
           continue;
