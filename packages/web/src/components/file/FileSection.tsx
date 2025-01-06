@@ -445,8 +445,8 @@ export function FileSection(props: FileSectionProps) {
     for(let lineNumber = 1; lineNumber < lines.length; lineNumber++) {
       let line = lines[lineNumber];
       // Get rid of any newline/return chars
-      line = line.replace(/\r/, "");
-      line = line.replace(/\n/, "");
+      line = line.replace(/\r/g, "");
+      line = line.replace(/\n/g, "");
       if(line !== "") {
         const fields = line.split(/,/);
         const fileUser: FileUser = {
