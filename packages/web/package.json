@@ -10,7 +10,7 @@
     "@types/node": "^22.13.0",
     "@types/react": "^19.0.3",
     "@types/react-dom": "^19.0.2",
-    "axios": "^1.7.9",
+    "axios": "^1.8.4",
     "bootstrap": "^5.3.3",
     "browser-util-inspect": "^0.2.0",
     "react": "^19.0.0",
