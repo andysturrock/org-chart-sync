@@ -28,7 +28,7 @@
     "ts-jest": "^29.2.5"
   },
   "dependencies": {
-    "aws-cdk": "^2.1007.0",
+    "aws-cdk": "^2.1030.0",
     "aws-cdk-lib": "^2.189.1",
     "constructs": "^10.4.2",
     "getenv": "^1.0.0",
